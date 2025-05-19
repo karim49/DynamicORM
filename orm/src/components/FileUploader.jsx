@@ -45,7 +45,7 @@ const FileUploader = ({ open, onClose, onSubmit }) => {
         console.log(selectedFile)
 
         try {
-            const response = await fetch('/api/upload-file', {
+            const response = await fetch('http://127.0.0.1:8000/api/upload-file', {
                 method: 'POST',
                 body: formData,
                 // No need to set Content-Type; browser sets multipart/form-data automatically
