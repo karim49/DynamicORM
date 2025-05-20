@@ -13,10 +13,11 @@ export const handleFileUpload = (req, res) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const filePath = path.join(__dirname, '..', file.path);
+  const filePath = path.join(file.path);
 
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error reading uploaded file' });
+  fs.readFile(filePath, (err, data) => {
+    if (err)
+      return res.status(500).json({ error: 'Error reading uploaded file' });
 
     console.log('File content:', data);
 

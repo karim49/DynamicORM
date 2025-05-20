@@ -5,12 +5,14 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "dev": "yarn nodemon --exec \"node --max-old-space-size=4096 --trace-warnings\" ./app.js",
     "start": "node app.js"
   },
   "dependencies": {
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "multer": "^2.0.0"
+    "multer": "^2.0.0",
+    "nodemon": "^3.1.10"
   }
 }

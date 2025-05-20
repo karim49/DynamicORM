@@ -3,8 +3,27 @@ import multer from 'multer';
 import { handleConnection } from '../controllers/connectionController.js';
 import { handleFileUpload } from '../controllers/uploadController.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+const uploadDir = path.join(__dirname, '..', 'uploads');
+
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname); // Use the original name of the uploaded file
+  }
+});
+
+const upload = multer({ storage: storage });
+
 
 router.post('/connection', handleConnection);
 router.post('/upload-file', upload.single('file'), handleFileUpload);

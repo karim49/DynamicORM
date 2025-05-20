@@ -1,7 +1,8 @@
 export const handleConnection = (req, res) => {
   const { nodeId, type, connectionString } = req.body;
 
-  if (!type || !connectionString) {
+  if (!type || !connectionString)
+  {
     return res.status(400).json({ error: 'Missing required fields: type or connectionString' });
   }
 
