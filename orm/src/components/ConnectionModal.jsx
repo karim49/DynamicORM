@@ -32,21 +32,23 @@ const ConnectionModal = ({ open, onClose, selectedNode }) => {
 
                 body: JSON.stringify({
                     nodeId: selectedNode?.id,
-                    type: selectedNode?.type || 'unknown',
-                    connection_string: connectionString,  // use snake_case here
+                    type: selectedNode?.data.sourceType || 'unknown',
+                    connectionString: connectionString, 
                 }),
             });
 
             if (!response.ok) throw new Error('Submission failed');
             console.log('Connection string sent successfully');
             onClose(); // close modal
-        } catch (err) {
+        } 
+        catch (err) {
             console.error('Error:', err);
         }
     };
 
     return (
         <Modal open={open} onClose={onClose}>
+
             <Box sx={style}>
                 <Typography variant="h6" gutterBottom>
                     Enter Connection String

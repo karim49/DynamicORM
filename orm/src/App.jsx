@@ -6,6 +6,7 @@ import { ReactFlowProvider } from 'reactflow';
 
 const App = () => {
   return (
+    
     <ReactFlowProvider>
       <Box sx={{ display: 'flex', height: '100vh' }}>
         <Sidebar />

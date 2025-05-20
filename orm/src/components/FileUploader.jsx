@@ -36,7 +36,6 @@ const FileUploader = ({ open, onClose, onSubmit }) => {
         }
     };
 
-
     const handleSubmit = async () => {
         if (!selectedFile) return;
 
@@ -48,7 +47,6 @@ const FileUploader = ({ open, onClose, onSubmit }) => {
             const response = await fetch('http://127.0.0.1:8000/api/upload-file', {
                 method: 'POST',
                 body: formData,
-                // No need to set Content-Type; browser sets multipart/form-data automatically
             });
 
             if (!response.ok) {

@@ -1,149 +1,128 @@
 import React, { useCallback, useState } from 'react';
 import ReactFlow, {
-  MiniMap,
-  Controls,
-  Background,
-  addEdge,
-  useNodesState,
-  useEdgesState,
-  useReactFlow,
+    MiniMap,
+    Controls,
+    Background,
+    addEdge,
+    useNodesState,
+    useEdgesState,
+    useReactFlow,
 } from 'reactflow';
 
-import { Box, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Box } from '@mui/material';
 import 'reactflow/dist/style.css';
 
 import ConnectionModal from './ConnectionModal';
 import FileUploader from './FileUploader';
+import { nodeTypes, edgeTypes } from './nodeTypes';
 
 const initialNodes = [];
 const initialEdges = [];
 
 const FlowCanvas = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const { project } = useReactFlow();
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const { screenToFlowPosition } = useReactFlow();
 
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+    const [selectedNode, setSelectedNode] = useState(null);
+    const [openModal, setOpenModal] = useState(false);
 
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const type = event.dataTransfer.getData('application/my-app');
-      if (!type) return;
+    const handleDelete = useCallback((nodeId) => {
+        setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+        setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    }, [setNodes, setEdges]);
 
-      const bounds = event.currentTarget.getBoundingClientRect();
-      const position = project({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      });
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault();
+            const type = event.dataTransfer.getData('application/my-app');
+            if (!type) return;
 
-      const newNode = {
-        id: `${+new Date()}`,
-        type: 'default',
-        position,
-        data: { label: `${type} Block`, blockType: type },
-      };
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
 
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [project, setNodes]
-  );
 
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
+            const newNode = {
+                id: `${+new Date()}`,
+                type: 'custom',
+                position,
+                data: {
+                    label: `${type} Block`,
+                    sourceType: type,
+                    onDelete: handleDelete,
+                },
+            };
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
+            setNodes((nds) => nds.concat(newNode));
+        },
+        [screenToFlowPosition, setNodes, handleDelete]
+    );
 
-  const handleNodeClick = useCallback((event, node) => {
-    // Prevent modal on trash icon click
-    if (event.target.closest('.delete-icon')) return;
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
 
-    setSelectedNode(node);
-    setOpenModal(true);
-  }, []);
+    const onConnect = useCallback(
+        (params) => setEdges((eds) => addEdge({ ...params, type: 'custom' }, eds)),
 
-  const handleCloseModal = () => {
-    setSelectedNode(null);
-    setOpenModal(false);
-  };
+        [setEdges]
+    );
 
-  const handleDelete = (nodeId) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-  };
+    const handleNodeClick = useCallback((event, node) => {
+        if (event.target.closest('.delete-icon')) return;
+        setSelectedNode(node);
+        setOpenModal(true);
+    }, []);
 
-  const handleSubmit = (nodeId, payload) => {
-    console.log('Submitting:', { nodeId, payload });
+    const handleCloseModal = () => {
+        setSelectedNode(null);
+        setOpenModal(false);
+    };
 
-    // Submit to backend here
-    // fetch('/api/submit', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ nodeId, ...payload }),
-    // });
+    // const handleSubmit = (nodeId, payload) => {
+    //     console.log('Submitting:', { nodeId, payload });
+    //     handleCloseModal();
+    // };
 
-    handleCloseModal();
-  };
+    return (
+        <Box style={{ flex: 1, height: '100vh' }} onDrop={onDrop} onDragOver={onDragOver}>
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodeClick={handleNodeClick}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                fitView
+            >
+                <MiniMap />
+                <Controls />
+                <Background />
+            </ReactFlow>
 
-  return (
-    <Box style={{ flex: 1, height: '100vh' }} onDrop={onDrop} onDragOver={onDragOver}>
-      <ReactFlow
-        nodes={nodes.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            label: (
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <span>{node.data.label}</span>
-                <IconButton
-                  className="delete-icon"
-                  size="small"
-                  onClick={() => handleDelete(node.id)}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            ),
-            blockType: node.data.blockType,
-          },
-        }))}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={handleNodeClick}
-        fitView
-      >
-        <MiniMap />
-        <Controls />
-        <Background />
-      </ReactFlow>
+            {selectedNode && openModal && selectedNode.data?.sourceType !== 'file' && (
+                <ConnectionModal
+                    open={openModal}
+                    onClose={handleCloseModal}
+                    selectedNode={selectedNode}
+                    // onSubmit={(value) => handleSubmit(selectedNode.id, { connectionString: value })}
+                />
+            )}
 
-      {/* Show Connection Modal or FileUploader based on type */}
-      {selectedNode && openModal && selectedNode.data?.blockType !== 'file' && (
-        <ConnectionModal
-          open={openModal}
-          onClose={handleCloseModal}
-          onSubmit={(value) => handleSubmit(selectedNode.id, { connectionString: value })}
-        />
-      )}
-
-      {selectedNode && openModal && selectedNode.data?.blockType === 'file' && (
-        <FileUploader
-          open={openModal}
-          onClose={handleCloseModal}
-          onSubmit={(file) => handleSubmit(selectedNode.id, { file })}
-        />
-      )}
-    </Box>
-  );
+            {selectedNode && openModal && selectedNode.data?.sourceType === 'file' && (
+                <FileUploader
+                    open={openModal}
+                    onClose={handleCloseModal}
+                    // onSubmit={(file) => handleSubmit(selectedNode.id, { file })}
+                />
+            )}
+        </Box>
+    );
 };
 
 export default FlowCanvas;

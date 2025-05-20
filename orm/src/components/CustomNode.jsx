@@ -1,13 +1,10 @@
 import React from 'react';
-import { Handle } from 'reactflow';
+import { Box, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { IconButton, Box, Typography } from '@mui/material';
+import { Handle } from 'reactflow';
 
 const CustomNode = ({ id, data }) => {
-    const { label } = data;
-
-    const handleDelete = (e) => {
-        e.stopPropagation(); // Prevent modal from opening
+    const handleDelete = () => {
         if (data.onDelete) {
             data.onDelete(id);
         }
@@ -24,21 +21,15 @@ const CustomNode = ({ id, data }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 1,
                 userSelect: 'none',
             }}
         >
-            <Typography variant="body2">{label}</Typography>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <IconButton size="small" onClick={handleDelete}>
-                    <DeleteIcon fontSize="small" />
-                </IconButton>
-            </div>
-
-            {/* You can add Handles here if you want connection points */}
-            <Handle type="source" position="right" />
+            <span>{data.label}</span>
+            <IconButton className="delete-icon" size="small" onClick={handleDelete}>
+                <DeleteIcon fontSize="small" />
+            </IconButton>
             <Handle type="target" position="left" />
+            <Handle type="source" position="right" />
         </Box>
     );
 };
