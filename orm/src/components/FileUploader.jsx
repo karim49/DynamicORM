@@ -9,7 +9,7 @@ import {
     Typography,
 } from '@mui/material';
 
-const FileUploader = ({ open, onClose, onSubmit }) => {
+const FileUploader = ({selectedNode,open, onClose, onSubmit }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -41,7 +41,7 @@ const FileUploader = ({ open, onClose, onSubmit }) => {
 
         const formData = new FormData();
         formData.append('file', selectedFile);
-        console.log(selectedFile)
+        // console.log(selectedFile)
 
         try {
             const response = await fetch('http://127.0.0.1:8000/api/upload-file', {
@@ -56,7 +56,9 @@ const FileUploader = ({ open, onClose, onSubmit }) => {
             const result = await response.json();
             console.log('Upload success:', result);
 
-            onSubmit(selectedFile); // Optionally notify parent
+            if (onSubmit) {
+                onSubmit(selectedNode, result.content); // <- sending parsed data
+            }
             setSelectedFile(null);
             onClose();
         } catch (error) {
