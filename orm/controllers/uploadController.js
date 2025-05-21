@@ -1,12 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import csv from 'csv-parser';
+import mime from 'mime-types';
+import { fileTypeFromFile } from 'file-type';
 
 // Required to get __dirname with ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const handleFileUpload = (req, res) => {
+export const handleFileUpload = async (req, res) => {
   const file = req.file;
 
   if (!file) {
@@ -14,17 +17,40 @@ export const handleFileUpload = (req, res) => {
   }
 
   const filePath = path.join(file.path);
+  const fileType = await fileTypeFromFile(filePath);
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeType = mime.lookup(filePath);
 
-  fs.readFile(filePath, (err, data) => {
-    if (err)
-      return res.status(500).json({ error: 'Error reading uploaded file' });
+  // Validate CSV file
+  if (
+    (fileType && fileType.mime !== 'text/csv') &&
+    ext !== '.csv' &&
+    mimeType !== 'text/csv'
+  ) {
+    return res.status(400).json({ error: 'Uploaded file is not a CSV file' });
+  }
 
-    console.log('File content:', data);
+  // Parse CSV inside a Promise so we can await
+  try {
+    const results = await new Promise((resolve, reject) => {
+      const dataRows = [];
+
+      fs.createReadStream(filePath, { encoding: 'utf8' })
+        .pipe(csv({ separator: ',' }))
+        .on('data', (data) => dataRows.push(data))
+        .on('end', () => resolve(dataRows))
+        .on('error', (err) => reject(err));
+    });
+
+
 
     return res.status(201).json({
-      message: 'File uploaded successfully',
-      originalName: file.originalname,
-      content: data,
+      message: 'File uploaded and parsed successfully',
+      originalName: path.basename(filePath),
+      content: results,
     });
-  });
+  } catch (err) {
+    console.error('CSV Parsing Error:', err);
+    return res.status(500).json({ error: 'Failed to parse CSV file' });
+  }
 };
