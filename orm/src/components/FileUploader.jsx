@@ -9,7 +9,7 @@ import {
     Typography,
 } from '@mui/material';
 
-const FileUploader = ({selectedNode,open, onClose, onSubmit }) => {
+const FileUploader = ({ selectedNode, open, onClose, onSubmit }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -57,7 +57,7 @@ const FileUploader = ({selectedNode,open, onClose, onSubmit }) => {
             console.log('Upload success:', result);
 
             if (onSubmit) {
-                onSubmit(selectedNode, result.content); // <- sending parsed data
+                onSubmit(selectedNode, result); // <- sending parsed data
             }
             setSelectedFile(null);
             onClose();
@@ -74,24 +74,41 @@ const FileUploader = ({selectedNode,open, onClose, onSubmit }) => {
     };
 
     return (
-        <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Upload File</DialogTitle>
+        <Dialog open={open} onClose={handleClose} sx={{
+            '& .MuiDialog-paper': {  // target the dialog paper container
+                width: 300,            // fixed width
+                height: 200,           // fixed height
+                maxWidth: '400px',     // prevent dialog from shrinking/expanding
+                maxHeight: '300px',
+                overflow: 'hidden',  
+                  
+            },
+        }} >
+            <DialogTitle>
+                <Typography sx={{ fontWeight: 'bold', fontSize: 14 }}>
+                    Upload File
+                </Typography>
+            </DialogTitle>
             <DialogContent>
                 <Box
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
+                    maxWidth="md"
                     sx={{
+                        height:10,
+                        justifyContent:'center',
                         border: '2px dashed gray',
                         borderRadius: 2,
                         padding: 4,
                         textAlign: 'center',
                         backgroundColor: dragOver ? '#f0f0f0' : 'white',
                         cursor: 'pointer',
+                        overflow: 'hidden',
                     }}
                     onClick={() => document.getElementById('file-input').click()}
                 >
-                    <Typography variant="body1">
+                    <Typography variant="body1"   sx={{ fontSize: selectedFile ? '1rem' : '0.5rem' }}>
                         {selectedFile ? selectedFile.name : 'Drag & Drop a file here or click to select'}
                     </Typography>
                     <input
@@ -100,13 +117,14 @@ const FileUploader = ({selectedNode,open, onClose, onSubmit }) => {
                         hidden
                         onChange={handleFileChange}
                         accept="*"
+                        
                     />
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit} disabled={!selectedFile}>
-                    Submit
+                <Button sx={{ fontSize: '.5rem' }} onClick={handleClose}>Cancel</Button>
+                <Button sx={{ fontSize: '.5rem' }} variant="contained" onClick={handleSubmit} disabled={!selectedFile}>
+                    Upload
                 </Button>
             </DialogActions>
         </Dialog>
