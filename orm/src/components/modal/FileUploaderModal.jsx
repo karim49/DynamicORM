@@ -1,74 +1,88 @@
 import React, { useState, useCallback } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    Box,
-    Typography,
-} from '@mui/material';
+import
+    {
+        Dialog,
+        DialogTitle,
+        DialogContent,
+        DialogActions,
+        Button,
+        Box,
+        Typography,
+    } from '@mui/material';
 
-const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
+const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) =>
+{
     const [selectedFile, setSelectedFile] = useState(null);
     const [dragOver, setDragOver] = useState(false);
 
-    const handleDrop = useCallback((e) => {
+    const handleDrop = useCallback((e) =>
+    {
         e.preventDefault();
         setDragOver(false);
         const file = e.dataTransfer.files[0];
-        if (file) {
+        if (file)
+        {
             setSelectedFile(file);
         }
     }, []);
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e) =>
+    {
         e.preventDefault();
         setDragOver(true);
     };
 
     const handleDragLeave = () => setDragOver(false);
 
-    const handleFileChange = (e) => {
+    const handleFileChange = (e) =>
+    {
         const file = e.target.files[0];
-        if (file) {
+        if (file)
+        {
             setSelectedFile(file);
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async () =>
+    {
         if (!selectedFile) return;
 
         const formData = new FormData();
         formData.append('file', selectedFile);
         // console.log(selectedFile)
 
-        try {
-            const response = await fetch('http://127.0.0.1:8000/api/upload-file', {
+        try
+        {
+            const response = await fetch(`${import.meta.env.VITE_BEAPI}/api/uploadFile`, {
+
                 method: 'POST',
                 body: formData,
             });
 
-            if (!response.ok) {
+            if (!response.ok)
+            {
                 throw new Error('Failed to upload file');
             }
 
             const result = await response.json();
             console.log('Upload success:', result);
 
-            if (onSubmit) {
+            if (onSubmit)
+            {
                 onSubmit(selectedNode, result); // <- sending parsed data
             }
             setSelectedFile(null);
             onClose();
-        } catch (error) {
+        } catch (error)
+        {
             console.error('Upload error:', error);
             // Optionally show error UI here
         }
     };
 
 
-    const handleClose = () => {
+    const handleClose = () =>
+    {
         setSelectedFile(null);
         onClose();
     };
@@ -80,8 +94,8 @@ const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
                 height: 200,           // fixed height
                 maxWidth: '400px',     // prevent dialog from shrinking/expanding
                 maxHeight: '300px',
-                overflow: 'hidden',  
-                  
+                overflow: 'hidden',
+
             },
         }} >
             <DialogTitle>
@@ -96,8 +110,8 @@ const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
                     onDragLeave={handleDragLeave}
                     maxWidth="md"
                     sx={{
-                        height:10,
-                        justifyContent:'center',
+                        height: 10,
+                        justifyContent: 'center',
                         border: '2px dashed gray',
                         borderRadius: 2,
                         padding: 4,
@@ -108,7 +122,7 @@ const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
                     }}
                     onClick={() => document.getElementById('file-input').click()}
                 >
-                    <Typography variant="body1"   sx={{ fontSize: selectedFile ? '1rem' : '0.5rem' }}>
+                    <Typography variant="body1" sx={{ fontSize: selectedFile ? '1rem' : '0.5rem' }}>
                         {selectedFile ? selectedFile.name : 'Drag & Drop a file here or click to select'}
                     </Typography>
                     <input
@@ -117,7 +131,7 @@ const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
                         hidden
                         onChange={handleFileChange}
                         accept="*"
-                        
+
                     />
                 </Box>
             </DialogContent>

@@ -3,7 +3,8 @@ import { Handle, useNodeId, useReactFlow } from 'reactflow';
 import { Box, Typography, Checkbox } from '@mui/material';
 import SchemaFieldList from './SchemaFieldList';
 
-const SchemaBox = ({ data }) => {
+const SchemaBox = ({ data }) =>
+{
   // const { schema = [], label = 'Schema Node' } = data;
   const { schema = [] } = data;
 
@@ -12,7 +13,8 @@ const SchemaBox = ({ data }) => {
   const nodeId = useNodeId();
   const { setNodes } = useReactFlow();
 
-  const handleToggle = (field) => {
+  const handleToggle = (field) =>
+  {
     setChecked((prev) =>
       prev.includes(field)
         ? prev.filter((f) => f !== field)
@@ -20,7 +22,8 @@ const SchemaBox = ({ data }) => {
     );
   };
 
-  const handleMainToggle = () => {
+  const handleMainToggle = () =>
+  {
     setIsSourceSelected((prev) => !prev);
     setNodes((nodes) =>
       nodes.map((node) =>
@@ -48,8 +51,8 @@ const SchemaBox = ({ data }) => {
         // border: '2px solid #4caf50',
         borderRadius: 2,
         // backgroundColor: '#e8f5e9',
-        backgroundColor: isSourceSelected ? '#e8f5e9' : 'rgba(129, 220, 214, 0.61)',
-        border: isSourceSelected ? '2px solid #4caf50' : '2px solid rgb(76, 175, 168)',
+        backgroundColor: isSourceSelected ? 'rgba(234, 190, 57, 0.33)' : 'rgba(129, 220, 214, 0.61)',
+        border: isSourceSelected ? '2px solid rgba(198, 163, 74, 0.67)' : '2px solid rgb(76, 175, 168)',
         minWidth: 150,
         position: 'relative',
         maxWidth: 400,
@@ -59,14 +62,18 @@ const SchemaBox = ({ data }) => {
 
       }}
     >
-      <Checkbox
-        checked={isSourceSelected}
-        onChange={handleMainToggle}
-        size="small"
-      />
-      <Typography variant="h6" gutterBottom sx={{ fontSize: 16, fontWeight: 'bold', textAlign: 'center', mt: -1, mb: -1 }}>
-        {data.sourceName}
-      </Typography>
+      <Box display="flex" alignItems="center" gap={1}>
+        <Checkbox
+          checked={isSourceSelected}
+          onChange={handleMainToggle}
+          size="small"
+        />
+        <Typography
+          variant="h6"  sx={{fontSize: 16,fontWeight: 'bold',textAlign: 'center',mt: -1,mb: -1,}}
+        >
+          {data.sourceName}
+        </Typography>
+      </Box>
       <SchemaFieldList
         fields={schema}
         checked={checked}

@@ -4,7 +4,8 @@ import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
 import flowHandlers from './flowHandlers';
 import { Background } from 'reactflow';
-const MainFlow = () => {
+const MainFlow = () =>
+{
   const [selectedNode, setSelectedNode] = useState(null);
   const [openModal, setOpenModal] = useState(false);
 
@@ -21,14 +22,15 @@ const MainFlow = () => {
     setEdges,
   } = flowHandlers({ setSelectedNode, setOpenModal, });
 
-  const handleCloseModal = useCallback(() => {
+  const handleCloseModal = useCallback(() =>
+  {
     setSelectedNode(null);
     setOpenModal(false);
   }, []);
 
   return (
     <Box
-      style={{ flex: 1, height: '100vh' , backgroundColor:'rgba(225, 250, 227, 0.47)' }}
+      style={{ flex: 1, height: '100vh', backgroundColor: 'rgba(225, 250, 227, 0.47)' }}
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
@@ -39,6 +41,8 @@ const MainFlow = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={handleNodeClick}
+        setNodes={setNodes}
+        setEdges={setEdges}
       />
       <NodeModals
         open={openModal}
