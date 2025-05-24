@@ -9,7 +9,6 @@ function integrateSchemas(schemas) {
       }
     }
   }
-
   return { fields: combinedFields };
 }
 
