@@ -48,7 +48,6 @@ const ConnectionModal = ({ open, onClose, selectedNode }) => {
 
     return (
         <Modal open={open} onClose={onClose}>
-
             <Box sx={style}>
                 <Typography variant="h6" gutterBottom>
                     Enter Connection String

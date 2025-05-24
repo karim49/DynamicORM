@@ -30,7 +30,7 @@ const SelectedSchemaButton = () => {
     </Button>
   );
 };
-const ReactFlowRenderer = ({
+const FlowRenderer = ({
   nodes,
   edges,
   onNodesChange,
@@ -39,7 +39,7 @@ const ReactFlowRenderer = ({
   onNodeClick,
 }) => {
   return (
-    <Box sx={{ height: '100vh', width: '100%' }}>
+    // <Box sx={{ height: '100vh', width: '100%' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -57,10 +57,10 @@ const ReactFlowRenderer = ({
         <Controls>
           <SelectedSchemaButton />
         </Controls>
-        <Background />
+  <Background color="green" gap={16} />
       </ReactFlow>
-    </Box>
+    // </Box>
   );
 };
 
-export default ReactFlowRenderer;
+export default FlowRenderer;

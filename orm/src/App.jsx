@@ -1,6 +1,6 @@
 import React from 'react';
 import Sidebar from './components/Sidebar';
-import FlowCanvas from './components/FlowCanvas';
+import MainFlow from './components/flow/MainFow';
 import { Box } from '@mui/material';
 import { ReactFlowProvider } from 'reactflow';
 
@@ -10,7 +10,7 @@ const App = () => {
       <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
           <Sidebar />
         <Box sx={{ flexGrow: 1, position: 'relative' }}>
-          <FlowCanvas />
+          <MainFlow />
         </Box>
       </Box>
     </ReactFlowProvider>

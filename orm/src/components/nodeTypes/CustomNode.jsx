@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, IconButton,Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Handle } from 'reactflow';
 
@@ -24,14 +24,12 @@ const CustomNode = ({ id, data }) => {
         userSelect: 'none',
         position: 'relative',
         height: '2vh',
-
       }}
     >
 
-      <Typography sx={{ fontSize: '1.2rem' , fontWeight:'bold'}} color='green'>
+      <Typography sx={{ fontSize: '1.2rem', fontWeight: 'bold' }} color='green'>
         {data.label}
       </Typography>
-      {/* <span>{data.label}</span> */}
       <IconButton
         className="delete-icon"
         size="small"

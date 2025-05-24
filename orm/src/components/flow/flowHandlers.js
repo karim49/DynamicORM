@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import {useNodesState,useEdgesState,useReactFlow,addEdge,} from 'reactflow';
 import { sourceMeta } from '../../lib/sourceMeta';
 
-export default function useFlowHandlers({ setSelectedNode, setOpenModal }) {
+export default function flowHandlers({ setSelectedNode, setOpenModal }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition } = useReactFlow();

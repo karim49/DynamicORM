@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
-import ReactFlowRenderer from './flow/ReactFlowRenderer';
-import NodeModals from './modals/NodeModals';
-import useFlowHandlers from './hooks/useFlowHandlers';
-const FlowCanvas = () => {
+import FlowRenderer from './FlowRenderer';
+import NodeModals from '../modal/NodeModals';
+import flowHandlers from './flowHandlers';
+import { Background } from 'reactflow';
+const MainFlow = () => {
   const [selectedNode, setSelectedNode] = useState(null);
   const [openModal, setOpenModal] = useState(false);
 
@@ -18,10 +19,7 @@ const FlowCanvas = () => {
     handleNodeClick,
     setNodes,
     setEdges,
-  } = useFlowHandlers({
-    setSelectedNode,
-    setOpenModal,
-  });
+  } = flowHandlers({ setSelectedNode, setOpenModal, });
 
   const handleCloseModal = useCallback(() => {
     setSelectedNode(null);
@@ -30,19 +28,18 @@ const FlowCanvas = () => {
 
   return (
     <Box
-      style={{ flex: 1, height: '100vh' }}
+      style={{ flex: 1, height: '100vh' , backgroundColor:'rgba(225, 250, 227, 0.47)' }}
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
-      <ReactFlowRenderer
+      <FlowRenderer
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={handleNodeClick} 
+        onNodeClick={handleNodeClick}
       />
-
       <NodeModals
         open={openModal}
         selectedNode={selectedNode}
@@ -54,4 +51,4 @@ const FlowCanvas = () => {
   );
 };
 
-export default FlowCanvas;
+export default MainFlow;

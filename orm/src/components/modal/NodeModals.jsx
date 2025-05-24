@@ -1,6 +1,6 @@
 import React from 'react';
-import ConnectionModal from '../ConnectionModal';
-import FileUploader from '../FileUploader';
+import ConnectionModal from './ConnectionModal';
+import FileUploaderModal from './FileUploaderModal';
 
 const NodeModals = ({ open, selectedNode, onClose, setNodes, setEdges }) => {
   if (!selectedNode || !open) return null;
@@ -23,7 +23,7 @@ const NodeModals = ({ open, selectedNode, onClose, setNodes, setEdges }) => {
 
   if (modalType === 'file') {
     return (
-      <FileUploader
+      <FileUploaderModal
         selectedNode={selectedNode}
         open={open}
         onClose={onClose}

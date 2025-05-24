@@ -9,7 +9,7 @@ import {
     Typography,
 } from '@mui/material';
 
-const FileUploader = ({ selectedNode, open, onClose, onSubmit }) => {
+const FileUploaderModal = ({ selectedNode, open, onClose, onSubmit }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -131,4 +131,4 @@ const FileUploader = ({ selectedNode, open, onClose, onSubmit }) => {
     );
 };
 
-export default FileUploader;
+export default FileUploaderModal;

@@ -8,17 +8,17 @@ import { sourceMeta } from '../lib/sourceMeta';
 
 
 const Sidebar = () => {
-  const categorizedBlocks = {};
+  const categorizedDataSources = {};
 
   Object.entries(sourceMeta).forEach(([key, meta]) => {
-    if (!categorizedBlocks[meta.category]) {
-      categorizedBlocks[meta.category] = [];
+    if (!categorizedDataSources[meta.category]) {
+      categorizedDataSources[meta.category] = [];
     }
-    categorizedBlocks[meta.category].push({ id: key, label: meta.label });
+    categorizedDataSources[meta.category].push({ type: key, label: meta.label });
   });
 
-  const handleDragStart = (e, id) => {
-    e.dataTransfer.setData('application/my-app', id);
+  const handleDragStart = (e, type) => {
+    e.dataTransfer.setData('application/my-app', type);
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -39,32 +39,25 @@ const Sidebar = () => {
         Data Sources
       </Typography>
 
-      {Object.entries(categorizedBlocks).map(([category, blocks]) => (
+      {Object.entries(categorizedDataSources).map(([category, source]) => (
         <Accordion key={category} sx={{ width: 150 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}  sx={{ mb: -1.2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ mb: -1.2 }}>
             <Typography variant="subtitle1" sx={{ fontSize: '.6rem' }}>{category}</Typography>
           </AccordionSummary>
           <AccordionDetails >
 
-              {blocks.map((block) => (
+            {source.map((src) => (
+              <Paper
+                key={src.type}
+                elevation={2}
+                sx={{ p: 1.5, mb: 1.5, cursor: 'grab', userSelect: 'none', fontSize: '.6rem', }}
+                draggable
+                onDragStart={(e) => handleDragStart(e, src.type)}
+              >
+                {src.label}
+              </Paper>
 
-                <Paper
-                  key={block.id}
-                  elevation={2}
-                  sx={{
-                    p: 1.5,
-                    mb: 1.5,
-                    cursor: 'grab',
-                    userSelect: 'none',
-                    fontSize: '.6rem',
-                  }}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, block.id)}
-                >
-                  {block.label}
-                </Paper>
-
-              ))}
+            ))}
 
           </AccordionDetails>
         </Accordion>

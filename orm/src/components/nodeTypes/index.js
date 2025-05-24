@@ -1,6 +1,6 @@
 import CustomNode from './CustomNode';
 import CustomEdge from './CustomEdge';
-import SchemaBox from './SchemaBox';
+import SchemaBox from '../schema/SchemaBox';
 
 export const nodeTypes = {
   custom: CustomNode,
