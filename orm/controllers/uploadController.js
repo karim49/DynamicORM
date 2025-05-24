@@ -5,7 +5,6 @@ import csv from 'csv-parser';
 import mime from 'mime-types';
 import { fileTypeFromFile } from 'file-type';
 
-// Required to get __dirname with ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,7 +20,6 @@ export const handleFileUpload = async (req, res) => {
   const ext = path.extname(filePath).toLowerCase();
   const mimeType = mime.lookup(filePath);
 
-  // Validate CSV file
   if (
     (fileType && fileType.mime !== 'text/csv') &&
     ext !== '.csv' &&

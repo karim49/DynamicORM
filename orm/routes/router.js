@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { handleConnection } from '../controllers/connectionController.js';
 import { handleFileUpload } from '../controllers/uploadController.js';
+import { handleSelectedSchema} from '../controllers/handleSchema.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -26,6 +27,7 @@ const upload = multer({ storage: storage });
 
 
 router.post('/connection', handleConnection);
-router.post('/upload-file', upload.single('file'), handleFileUpload);
+router.post('/uploadFile', upload.single('file'), handleFileUpload);
+router.post('/handleSelectedSchema', handleSelectedSchema);
 
 export default router;
