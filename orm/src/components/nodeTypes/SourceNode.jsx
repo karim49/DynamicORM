@@ -3,7 +3,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Handle } from 'reactflow';
 
-const CustomNode = ({ id, data }) => {
+const SourceNode = ({ id, data }) => {
   const handleDelete = () => {
     if (data.onDelete) {
       data.onDelete(id);
@@ -43,4 +43,4 @@ const CustomNode = ({ id, data }) => {
   );
 };
 
-export default CustomNode;
+export default SourceNode;

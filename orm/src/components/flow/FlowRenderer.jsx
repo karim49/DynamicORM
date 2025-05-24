@@ -3,49 +3,52 @@ import ReactFlow, {
   MiniMap,
   Controls,
   Background,
-  useReactFlow,
 } from 'reactflow';
 import { nodeTypes, edgeTypes } from '../nodeTypes/index';
 import { Box, Button } from '@mui/material';
 import 'reactflow/dist/style.css';
 import sendSchemaData from '../api/SendSchemaData';
-const SelectedSchemaButton = ({ setNodes, setEdges }) =>
-{
 
-  const { getNodes, getEdges } = useReactFlow();
-  const handleClick = async () =>
-  {
-    const selectedSchemas = getNodes()
-      .filter((node) => node.type === 'schema' && node.data?.isSourceSelected);
-
-    // const selectedSchemas = getNodes()
-    //   .filter((node) => node.type === 'schema' && node.data?.isSourceSelected)
-    //   .map((node) => node.data.sourceName);
-
-    try
-    {
+const IntegrateSchemas = ({ nodes, setNodes, setEdges }) => {
+  const handleClick = async () => {
+    const selectedSchemas = nodes.filter(
+      (node) => node.type === 'schemaNode' && node.data?.isSourceSelected
+    );
+    if (selectedSchemas.length < 2) {
+      alert('Please select at least two schemas to integrate.');
+      return;
+    }
+    try {
       const res = await sendSchemaData(selectedSchemas);
       const integratedNode = res.node;
-      setNodes((prev) => [...prev, integratedNode]);
+      let parentIds = selectedSchemas.map(node => node.id);
+      const ancesstorsIds = selectedSchemas.map(node => node.data.parentId);
+      parentIds = [...parentIds, ...ancesstorsIds]
+      const integratedNodeWithParents = {
+        ...integratedNode, type: 'integratedSchemaNode',
+
+        data: {
+          ...integratedNode.data,
+          parentIds,
+        },
+      };
+      setNodes(prev => [...prev, integratedNodeWithParents]);
       const newEdges = selectedSchemas.map((node) => ({
         id: `edge-${node.id}-${integratedNode.id}`,
         source: node.id,
-        sourceHandle: node.id,
+        sourceHandle: 'source',
         target: integratedNode.id,
         targetHandle: 'target',
         type: 'custom',
       }));
-      console.log('Selected newEdges:', newEdges);
-      console.log('getEdges1:', getEdges());
 
       setEdges((prev) => [...prev, ...newEdges]);
-      console.log('getEdges2:', getEdges());
 
       console.log('Selected Schemas:', selectedSchemas);
-    } catch (error)
-    {
+    } catch (error) {
       console.error('Error sending schema data:', error);
     }
+
   };
 
   return (
@@ -69,8 +72,7 @@ const FlowRenderer = ({
   onNodeClick,
   setNodes,
   setEdges,
-}) =>
-{
+}) => {
   return (
     // <Box sx={{ height: '100vh', width: '100%' }}>
     <ReactFlow
@@ -82,13 +84,17 @@ const FlowRenderer = ({
       onNodeClick={onNodeClick}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
-
     // fitView
     >
 
       <MiniMap />
       <Controls>
-        <SelectedSchemaButton setNodes={setNodes} setEdges={setEdges} />
+        <IntegrateSchemas
+          nodes={nodes}
+          edges={edges}
+          setNodes={setNodes}
+          setEdges={setEdges}
+        />
       </Controls>
       <Background color="green" gap={16} />
     </ReactFlow>

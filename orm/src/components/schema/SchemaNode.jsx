@@ -3,8 +3,7 @@ import { Handle, useNodeId, useReactFlow } from 'reactflow';
 import { Box, Typography, Checkbox } from '@mui/material';
 import SchemaFieldList from './SchemaFieldList';
 
-const SchemaBox = ({ data }) =>
-{
+const SchemaNode = ({ data }) => {
   // const { schema = [], label = 'Schema Node' } = data;
   const { schema = [] } = data;
 
@@ -13,8 +12,7 @@ const SchemaBox = ({ data }) =>
   const nodeId = useNodeId();
   const { setNodes } = useReactFlow();
 
-  const handleToggle = (field) =>
-  {
+  const handleToggle = (field) => {
     setChecked((prev) =>
       prev.includes(field)
         ? prev.filter((f) => f !== field)
@@ -22,8 +20,7 @@ const SchemaBox = ({ data }) =>
     );
   };
 
-  const handleMainToggle = () =>
-  {
+  const handleMainToggle = () => {
     setIsSourceSelected((prev) => !prev);
     setNodes((nodes) =>
       nodes.map((node) =>
@@ -69,7 +66,7 @@ const SchemaBox = ({ data }) =>
           size="small"
         />
         <Typography
-          variant="h6"  sx={{fontSize: 16,fontWeight: 'bold',textAlign: 'center',mt: -1,mb: -1,}}
+          variant="h6" sx={{ fontSize: 16, fontWeight: 'bold', textAlign: 'center', mt: -1, mb: -1, }}
         >
           {data.sourceName}
         </Typography>
@@ -81,9 +78,9 @@ const SchemaBox = ({ data }) =>
       />
 
       <Handle type="target" position="top" />
-      {/* <Handle type="source" position="bottom" /> */}
+      <Handle type="source" position="bottom" />
     </Box>
   );
 };
 
-export default SchemaBox;
+export default SchemaNode;

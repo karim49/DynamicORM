@@ -1,39 +1,41 @@
 import { useCallback } from 'react';
-import {useNodesState,useEdgesState,useReactFlow,addEdge,} from 'reactflow';
+import { useNodesState, useEdgesState, useReactFlow, addEdge, } from 'reactflow';
 import { sourceMeta } from '../../lib/sourceMeta';
 
-export default function flowHandlers({ setSelectedNode, setOpenModal }) {
+export default function useFlowHandlers({ setSelectedNode, setOpenModal }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { screenToFlowPosition } = useReactFlow();
 
   const handleDelete = useCallback(
     (nodeId) => {
+      const toDelete = new Set([nodeId]);
+
+      const collectChildren = (nodes, id) => {
+        nodes.forEach((node) => {
+          const parentIds = node.data?.parentIds || (node.data?.parentId ? [node.data.parentId] : []);
+          if (parentIds.includes(id) && !toDelete.has(node.id)) {
+            toDelete.add(node.id);
+            collectChildren(nodes, node.id);
+          }
+        });
+      };
+
       setNodes((nds) => {
-        const toDelete = new Set([nodeId]);
-        const collectChildren = (id) => {
-          nds.forEach((node) => {
-            if (node.data?.parentId === id) {
-              toDelete.add(node.id);
-              collectChildren(node.id);
-            }
-          });
-        };
-        collectChildren(nodeId);
+        collectChildren(nds, nodeId);
         return nds.filter((node) => !toDelete.has(node.id));
       });
 
-      setEdges((eds) =>
-        eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId)
-      );
+      setEdges((eds) => eds.filter((edge) => !toDelete.has(edge.source) && !toDelete.has(edge.target)));
     },
     [setNodes, setEdges]
   );
 
+
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      
+
       const type = event.dataTransfer.getData('application/my-app');
       const meta = sourceMeta[type];
       if (!meta) return;
@@ -41,7 +43,7 @@ export default function flowHandlers({ setSelectedNode, setOpenModal }) {
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
       const newNode = {
         id: `${+new Date()}`,
-        type: 'custom',
+        type: 'sourceNode',
         position,
         data: {
           label: `${meta.label}`,
@@ -88,7 +90,7 @@ export default function flowHandlers({ setSelectedNode, setOpenModal }) {
 
           const moveChildren = (parentId) => {
             updatedNodes = updatedNodes.map((n) => {
-              if (n.data?.parentId === parentId) {
+              if (Array.isArray(n.data?.parentIds) ? n.data.parentIds.includes(parentId) : n.data?.parentId === parentId) {
                 const newPos = {
                   x: n.position.x + dx,
                   y: n.position.y + dy,
@@ -114,7 +116,7 @@ export default function flowHandlers({ setSelectedNode, setOpenModal }) {
   const handleNodeClick = useCallback(
     (event, node) => {
       if (event.target.closest('.delete-icon')) return;
-      if (node.data?.label === 'SchemaBox') return;
+      if (node.data?.label === 'SchemaNode') return;
       setSelectedNode(node);
       setOpenModal(true);
     },

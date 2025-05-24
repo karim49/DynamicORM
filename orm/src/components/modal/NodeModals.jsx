@@ -29,16 +29,16 @@ const NodeModals = ({ open, selectedNode, onClose, setNodes, setEdges }) => {
         onClose={onClose}
         onSubmit={(node, result) => {
           const schemaFields = Object.keys(result.content[0]);
-          const childNodeId = `schema-${Date.now()}`;
+          const childNodeId = `schemaNode-${Date.now()}`;
           const childNode = {
             id: childNodeId,
-            type: 'schema',
+            type: 'schemaNode',
             position: {
               x: node.position.x + 250,
               y: node.position.y + 100,
             },
             data: {
-              label: 'SchemaBox',
+              label: 'schemaNode',
               schema: schemaFields,
               parentId: node.id,
               sourceName: result.originalName

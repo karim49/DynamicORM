@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
-import flowHandlers from './flowHandlers';
+import useFlowHandlers from './flowHandler';
 import { Background } from 'reactflow';
 const MainFlow = () =>
 {
@@ -20,7 +20,7 @@ const MainFlow = () =>
     handleNodeClick,
     setNodes,
     setEdges,
-  } = flowHandlers({ setSelectedNode, setOpenModal, });
+  } = useFlowHandlers({ setSelectedNode, setOpenModal, });
 
   const handleCloseModal = useCallback(() =>
   {

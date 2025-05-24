@@ -1,10 +1,12 @@
-import CustomNode from './CustomNode';
+import SourceNode from './SourceNode';
 import CustomEdge from './CustomEdge';
-import SchemaBox from '../schema/SchemaBox';
+import SchemaNode from '../schema/SchemaNode';
+import IntegratedNode from './IntegratedNode';
 
 export const nodeTypes = {
-  custom: CustomNode,
-  schema: SchemaBox,
+  sourceNode: SourceNode,
+  schemaNode: SchemaNode,
+  integratedSchemaNode : IntegratedNode
 };
 
 export const edgeTypes = {
