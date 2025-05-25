@@ -4,17 +4,13 @@ import MainFlow from './components/flow/MainFow';
 import { Box } from '@mui/material';
 import { ReactFlowProvider } from 'reactflow';
 
-const App = () => {
-  return (
-    <ReactFlowProvider>
-      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-          <Sidebar />
-        <Box sx={{ flexGrow: 1, position: 'relative' }}>
-          <MainFlow />
-        </Box>
-      </Box>
-    </ReactFlowProvider>
-  );
-};
+const App = () => (
+  <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <Sidebar />
+    <Box sx={{ flexGrow: 1, position: 'relative' }}>
+      <MainFlow />
+    </Box>
+  </Box>
+);
 
 export default App;

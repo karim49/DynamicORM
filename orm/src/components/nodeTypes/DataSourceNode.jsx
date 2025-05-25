@@ -1,13 +1,16 @@
 import React from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Handle } from 'reactflow';
+import { Handle, useReactFlow } from 'reactflow';
 
-const SourceNode = ({ id, data }) => {
+const DataSourceNode = ({ id, data }) => {
+
+   const { deleteElements } = useReactFlow();
+
+
   const handleDelete = () => {
-    if (data.onDelete) {
-      data.onDelete(id);
-    }
+    deleteElements({ nodes: [{ id }] });
+
   };
 
   return (
@@ -43,4 +46,4 @@ const SourceNode = ({ id, data }) => {
   );
 };
 
-export default SourceNode;
+export default DataSourceNode;

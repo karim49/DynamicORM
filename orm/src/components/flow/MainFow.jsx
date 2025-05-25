@@ -4,10 +4,13 @@ import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
 import useFlowHandlers from './flowHandler';
 import { Background } from 'reactflow';
+import { useSelector } from 'react-redux';
+import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
 const MainFlow = () =>
 {
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
+
+  const selectedNode = useSelector(state => state.ui.selectedNode);
+const openModal = useSelector(state => state.ui.openModal);
 
   const {
     nodes,
