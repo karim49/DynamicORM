@@ -4,56 +4,36 @@ import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
 import useFlowHandlers from './flowHandler';
 import { Background } from 'reactflow';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
+import AlertModal from '../modal/AlertModal';
+
 const MainFlow = () =>
 {
-
-  const selectedNode = useSelector(state => state.ui.selectedNode);
-const openModal = useSelector(state => state.ui.openModal);
-
-  const {
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onDrop,
-    onDragOver,
-    onConnect,
-    handleNodeClick,
-    setNodes,
-    setEdges,
-  } = useFlowHandlers({ setSelectedNode, setOpenModal, });
-
+  const dispatch = useDispatch();
   const handleCloseModal = useCallback(() =>
   {
-    setSelectedNode(null);
-    setOpenModal(false);
+    dispatch(setSelectedNode(null));
+    dispatch(setOpenModal(true));
   }, []);
+  const [alertOpen, setAlertOpen] = React.useState(false);
+  const [alertMsg, setAlertMsg] = React.useState('');
 
   return (
     <Box
-      style={{ flex: 1, height: '100vh', backgroundColor: 'rgba(225, 250, 227, 0.47)' }}
-      onDrop={onDrop}
-      onDragOver={onDragOver}
-    >
-      <FlowRenderer
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={handleNodeClick}
-        setNodes={setNodes}
-        setEdges={setEdges}
-      />
-      <NodeModals
-        open={openModal}
-        selectedNode={selectedNode}
-        onClose={handleCloseModal}
-        setNodes={setNodes}
-        setEdges={setEdges}
-      />
+      sx={{
+        flex: 1,
+        height: '95vh',
+        background: 'linear-gradient(135deg, #e9ecef 0%, #f4f6f8 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 3,
+        boxShadow: 2,
+        p: 2,
+      }}>
+      <FlowRenderer setAlertMsg={setAlertMsg} setAlertOpen={setAlertOpen} />
+      <NodeModals onClose={handleCloseModal} />
+      <AlertModal open={alertOpen} onClose={() => setAlertOpen(false)} message={alertMsg} />
     </Box>
   );
 };

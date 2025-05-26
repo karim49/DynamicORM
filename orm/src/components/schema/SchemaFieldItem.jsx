@@ -3,7 +3,7 @@ import { ListItem, ListItemText, Checkbox } from '@mui/material';
 
 const SchemaFieldItem = ({ field, checked, onToggle }) => {
   return (
-    <ListItem disableGutters>
+    <ListItem >
       <Checkbox
         checked={checked}
         onChange={() => onToggle(field)}

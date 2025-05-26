@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import {
-    Modal,
-    Box,
-    Typography,
-    TextField,
-    Button
-} from '@mui/material';
+import { Modal, Box, Typography, TextField, Button } from '@mui/material';
+import { sendConnectionApi } from '../api/nodeHelpers';
 
 const style = {
     position: 'absolute',
@@ -19,29 +14,24 @@ const style = {
     p: 4,
 };
 
-const ConnectionModal = ({ open, onClose, selectedNode }) => {
+const ConnectionModal = ({ open, onClose, selectedNode }) =>
+{
     const [connectionString, setConnectionString] = useState('');
 
-    const handleSubmit = async () => {
-        try {
-            const response = await fetch(`${import.meta.env.VITE_BEAPI}/api/connection`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-
-                body: JSON.stringify({
-                    nodeId: selectedNode?.id,
-                    type: selectedNode?.data.sourceType || 'unknown',
-                    connectionString: connectionString, 
-                }),
+    const handleSubmit = async () =>
+    {
+        try
+        {
+            await sendConnectionApi({
+                nodeId: selectedNode?.id,
+                type: selectedNode?.data.sourceType || 'unknown',
+                connectionString: connectionString,
             });
-
-            if (!response.ok) throw new Error('Submission failed');
             console.log('Connection string sent successfully');
             onClose(); // close modal
-        } 
-        catch (err) {
+        }
+        catch (err)
+        {
             console.error('Error:', err);
         }
     };

@@ -10,7 +10,7 @@ import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
 
 
 
-const FlowRenderer = () =>
+const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
 {
   const nodes = useSelector(state => state.nodes);
   const edges = useSelector(state => state.edges);
@@ -18,8 +18,54 @@ const FlowRenderer = () =>
   const { screenToFlowPosition } = useReactFlow();
 
   const onNodesChange = useCallback(
-    (changes) =>
-    {
+    (changes) => {
+      // Custom: If a dataSourceNode moves, move all its descendants by the same delta
+      const posChanges = changes.filter((c) => c.type === 'position' && c.position);
+      if (posChanges.length > 0) {
+        let updatedNodes = [...nodes];
+        posChanges.forEach((change) => {
+          const node = updatedNodes.find((n) => n.id === change.id);
+          if (!node) return;
+          // Only apply descendant-move logic to dataSourceNode
+          if (node.type === 'dataSourceNode') {
+            const dx = change.position.x - node.position.x;
+            const dy = change.position.y - node.position.y;
+            // Move the parent node
+            updatedNodes = updatedNodes.map(n =>
+              n.id === node.id ? { ...n, position: { ...change.position } } : n
+            );
+            // Recursively move all descendants immutably
+            const moveChildren = (parentId) => {
+              updatedNodes = updatedNodes.map((n) => {
+                if (n.data?.parentId === parentId) {
+                  const newPos = {
+                    x: n.position.x + dx,
+                    y: n.position.y + dy,
+                  };
+                  updatedNodes = moveChildren(n.id);
+                  return { ...n, position: newPos };
+                }
+                return n;
+              });
+              return updatedNodes;
+            };
+            updatedNodes = moveChildren(node.id);
+          } else {
+            // For non-dataSourceNode, just move the node itself (child can move alone)
+            updatedNodes = updatedNodes.map(n =>
+              n.id === node.id ? { ...n, position: { ...change.position } } : n
+            );
+          }
+        });
+        dispatch(setNodes(updatedNodes));
+        // Also apply any other changes (like selection etc)
+        const otherChanges = changes.filter((c) => c.type !== 'position');
+        if (otherChanges.length > 0) {
+          dispatch(setNodes(applyNodeChanges(otherChanges, updatedNodes)));
+        }
+        return;
+      }
+      // Default: just apply changes
       dispatch(setNodes(applyNodeChanges(changes, nodes)));
     },
     [dispatch, nodes]
@@ -33,17 +79,20 @@ const FlowRenderer = () =>
     [dispatch, edges]
   );
 
- const onNodeClick = useCallback(
-  (event, node) => {
-    // Ignore clicks on the delete icon
-    if (event.target.closest('.delete-icon')) return;
-    // Ignore clicks on nodes with label 'SchemaNode'
-    if (node?.type === 'SchemaNode') return;
-    dispatch(setSelectedNode(node));
-    dispatch(setOpenModal(true));
-  },
-  [dispatch]
-);
+  const onNodeClick = useCallback(
+    (event, node) =>
+    {
+      // Ignore clicks on the delete icon
+      if (event.target.closest('.delete-icon')) return;
+      // Ignore clicks on nodes with label 'SchemaNode'
+      if (node?.type === 'SchemaNode') return;
+      // Log the nodes from Redux state
+      console.log('Redux nodes:', nodes);
+      dispatch(setSelectedNode(node));
+      dispatch(setOpenModal(true));
+    },
+    [dispatch, nodes]
+  );
 
   const onNodesDelete = useCallback(
     (deletedNodes) =>
@@ -80,10 +129,9 @@ const FlowRenderer = () =>
     (event) =>
     {
       event.preventDefault();
-      const type = event.dataTransfer.getData('application/reactflow');
-      
-      if (!type) return;
-
+      const data = event.dataTransfer.getData('application/reactflow');
+      const [type, srcType] = JSON.parse(data);
+      if (!type || !srcType) return;
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
@@ -95,16 +143,13 @@ const FlowRenderer = () =>
         position,
         data: { label: `${type}` },
       };
-      if (type === 'dataSourceNode')
-      {
-        newNode.data = { ...newNode.data, schema: [], parentId: null, sourceName: '' };
-      } else if (type === 'connectionNode')
-      {
-        newNode.data = { ...newNode.data, modalType: 'connection' };
-      } else if (type === 'fileNode')
-      {
-        newNode.data = { ...newNode.data, modalType: 'file' };
-      }
+
+      newNode.data = {
+        ...newNode.data, schema: [], parentId: null, sourceName: '',
+        srcType: srcType, type: type
+      };
+      newNode.data = { ...newNode.data, modalType: 'connection' };
+
       dispatch(addNode(newNode));
     },
     [dispatch, screenToFlowPosition]
@@ -117,6 +162,7 @@ const FlowRenderer = () =>
   }, []);
 
 
+  // Pass alert handlers to IntegrateSchemas
   return (
     <div style={{ width: '100%', height: '100%' }} onDrop={onDrop} onDragOver={onDragOver}>
       <ReactFlow
@@ -128,10 +174,11 @@ const FlowRenderer = () =>
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesDelete={onNodesDelete}
+        proOptions={{ hideAttribution: true }}
       >
         <MiniMap />
         <Controls>
-          <IntegrateSchemas />
+          <IntegrateSchemas setAlertMsg={setAlertMsg} setAlertOpen={setAlertOpen} />
         </Controls>
         <Background color="green" gap={16} />
       </ReactFlow>
