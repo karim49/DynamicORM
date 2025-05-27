@@ -20,6 +20,20 @@ const IntegrateSchemas = ({ setAlertMsg, setAlertOpen }) => {
       }
       return;
     }
+    // Prevent duplicate integrated schema for the same set of schema nodes
+    const selectedIds = selectedSchemas.map(n => n.id).sort().join(',');
+    const duplicate = nodes.some(n =>
+      n.type === 'integratedSchemaNode' &&
+      Array.isArray(n.data?.parentIds) &&
+      n.data.parentIds.slice().sort().join(',') === selectedIds
+    );
+    if (duplicate) {
+      if (setAlertMsg && setAlertOpen) {
+        setAlertMsg('An integrated schema for the selected schemas already exists.');
+        setAlertOpen(true);
+      }
+      return;
+    }
     // Build payload: for each selected schema, send only schema selection and parent info
     const payload = selectedSchemas.map(node => ({
       nodeId: node.id,

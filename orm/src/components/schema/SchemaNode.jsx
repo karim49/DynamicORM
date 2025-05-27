@@ -9,7 +9,7 @@ import { removeFile } from '../../store/slices/filesSlice';
 import { useSelector } from 'react-redux';
 import { updateNode } from '../../store/slices/nodesSlice';
 
-const SchemaNode = ({ data }) =>
+const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
 {
   const { deleteElements } = useReactFlow();
   const nodeId = useNodeId();
@@ -78,7 +78,7 @@ const SchemaNode = ({ data }) =>
         padding: 2,
         border: '1px solid #e0e3e7',
         borderRadius: 3,
-        backgroundColor: isSourceSelected ? 'rgba(234, 190, 57, 0.10)' : '#fff',
+        backgroundColor: highlight ? 'rgba(56, 142, 60, 0.15)' : (isSourceSelected ? 'rgba(234, 190, 57, 0.10)' : '#fff'),
         minWidth: 120,
         display: 'flex',
         flexDirection: 'column',
@@ -93,35 +93,40 @@ const SchemaNode = ({ data }) =>
       }}
     >
       <Box display="flex" alignItems="center" gap={1}>
-        <Checkbox
-          checked={isSourceSelected}
-          onChange={handleMainToggle}
-          size="small"
-          sx={{ color: '#1976d2' }}
-        />
+        {!viewOnly && (
+          <Checkbox
+            checked={isSourceSelected}
+            onChange={handleMainToggle}
+            size="small"
+            sx={{ color: '#1976d2' }}
+          />
+        )}
         <Typography
           variant="h6"
           sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#2d323c', textAlign: 'center', flex: 1 }}
         >
           {data.sourceName}
         </Typography>
-        <IconButton
-          className="delete-icon"
-          size="small"
-          onClick={e => {
-            e.stopPropagation();
-            handleDelete();
-          }}
-          aria-label="Delete node"
-          sx={{ ml: '1rem', color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
+        {!viewOnly && (
+          <IconButton
+            className="delete-icon"
+            size="small"
+            onClick={e => {
+              e.stopPropagation();
+              handleDelete();
+            }}
+            aria-label="Delete node"
+            sx={{ ml: '1rem', color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        )}
       </Box>
       <SchemaFieldList
         fields={schema}
         checked={checked}
         onToggle={handleToggle}
+        viewOnly={viewOnly}
       />
       <Handle type="target" position="top" />
       <Handle type="source" position="bottom" />

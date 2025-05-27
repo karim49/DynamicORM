@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
@@ -6,9 +6,8 @@ import useFlowHandlers from './flowHandler';
 import { Background } from 'reactflow';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
-import AlertModal from '../modal/AlertModal';
 
-const MainFlow = () =>
+const MainFlow = ({ setAlertMsg, setAlertOpen }) =>
 {
   const dispatch = useDispatch();
   const handleCloseModal = useCallback(() =>
@@ -16,8 +15,6 @@ const MainFlow = () =>
     dispatch(setSelectedNode(null));
     dispatch(setOpenModal(true));
   }, []);
-  const [alertOpen, setAlertOpen] = React.useState(false);
-  const [alertMsg, setAlertMsg] = React.useState('');
 
   return (
     <Box
@@ -33,7 +30,6 @@ const MainFlow = () =>
       }}>
       <FlowRenderer setAlertMsg={setAlertMsg} setAlertOpen={setAlertOpen} />
       <NodeModals onClose={handleCloseModal} />
-      <AlertModal open={alertOpen} onClose={() => setAlertOpen(false)} message={alertMsg} />
     </Box>
   );
 };

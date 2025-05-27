@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import ReactFlow, { MiniMap, Controls, Background, useReactFlow, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import { nodeTypes, edgeTypes } from '../nodeTypes/index';
 import IntegrateSchemas from './IntegrateSchemas';
@@ -161,6 +161,28 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  useEffect(() => {
+    const handleOpenLoadedSchema = (e) => {
+      const { schema, idx } = e.detail;
+      // Replace all nodes and edges with just the loaded schema node, in viewOnly/highlight mode
+      const newNode = {
+        id: `loadedSchema-${Date.now()}-${idx}`,
+        type: 'schemaNode',
+        position: { x: 300, y: 200 },
+        data: {
+          label: schema.name || `Schema ${idx + 1}`,
+          schema: Array.isArray(schema) ? schema : schema.fields || schema,
+          sourceName: schema.name || `Schema ${idx + 1}`,
+          viewOnly: true,
+          highlight: true,
+        },
+      };
+      dispatch(setNodes([newNode]));
+      dispatch(setEdges([]));
+    };
+    window.addEventListener('openLoadedSchema', handleOpenLoadedSchema);
+    return () => window.removeEventListener('openLoadedSchema', handleOpenLoadedSchema);
+  }, [dispatch]);
 
   // Pass alert handlers to IntegrateSchemas
   return (
@@ -178,7 +200,6 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
       >
         <MiniMap />
         <Controls>
-          <IntegrateSchemas setAlertMsg={setAlertMsg} setAlertOpen={setAlertOpen} />
         </Controls>
         <Background color="green" gap={16} />
       </ReactFlow>
