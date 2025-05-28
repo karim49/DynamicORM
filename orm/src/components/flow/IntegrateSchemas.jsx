@@ -69,10 +69,11 @@ const IntegrateSchemas = ({ setAlertMsg, setAlertOpen }) => {
         },
       };
       dispatch(addNode(integratedNode));
-      res.parents.forEach((parentId) => {
+      // For each selected schema node, connect the parent node (not fields) to the integrated node
+      selectedSchemas.forEach((schemaNode) => {
         dispatch(addEdge({
-          id: `edge-${parentId}-${integratedNodeId}`,
-          source: parentId,
+          id: `edge-${schemaNode.id}-${integratedNodeId}`,
+          source: schemaNode.id,
           sourceHandle: 'source',
           target: integratedNodeId,
           targetHandle: 'target',

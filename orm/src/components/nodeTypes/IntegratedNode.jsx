@@ -163,7 +163,7 @@ const IntegratedNode = ({ id, data }) => {
                     ))}
                 </List>
             </Box>
-            <Handle type="target" position="top" />
+            <Handle type="target" position="top" id="target" />
             {/* <Handle type="source" position="bottom" /> */}
             <Menu
                 anchorEl={menuAnchor}

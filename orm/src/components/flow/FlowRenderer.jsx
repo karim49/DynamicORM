@@ -126,31 +126,56 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
   );
 
   const onDrop = useCallback(
-    (event) =>
-    {
+    (event) => {
       event.preventDefault();
+      // Handle ETL Transform
+      const etlFn = event.dataTransfer.getData('application/etl-fn');
+      if (etlFn) {
+        const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+        const newNode = {
+          id: `etl-fn-${etlFn}-${Date.now()}`,
+          type: 'etlTransformNode',
+          position,
+          data: { label: etlFn },
+        };
+        dispatch(addNode(newNode));
+        return;
+      }
+      // Handle ETL Load
+      const etlLoad = event.dataTransfer.getData('application/etl-load');
+      if (etlLoad) {
+        const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+        const newNode = {
+          id: `etl-load-${etlLoad}-${Date.now()}`,
+          type: 'etlLoadNode',
+          position,
+          data: { label: etlLoad },
+        };
+        dispatch(addNode(newNode));
+        return;
+      }
+      // Fallback: handle normal reactflow drag
       const data = event.dataTransfer.getData('application/reactflow');
-      const [type, srcType] = JSON.parse(data);
-      if (!type || !srcType) return;
-      const position = screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-
-      const newNode = {
-        id: `${type}_${+new Date()}`,
-        type: 'dataSourceNode',
-        position,
-        data: { label: `${type}` },
-      };
-
-      newNode.data = {
-        ...newNode.data, schema: [], parentId: null, sourceName: '',
-        srcType: srcType, type: type
-      };
-      newNode.data = { ...newNode.data, modalType: 'connection' };
-
-      dispatch(addNode(newNode));
+      if (data) {
+        const [type, srcType] = JSON.parse(data);
+        if (!type || !srcType) return;
+        const position = screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        });
+        const newNode = {
+          id: `${type}_${+new Date()}`,
+          type: 'dataSourceNode',
+          position,
+          data: { label: `${type}` },
+        };
+        newNode.data = {
+          ...newNode.data, schema: [], parentId: null, sourceName: '',
+          srcType: srcType, type: type
+        };
+        newNode.data = { ...newNode.data, modalType: 'connection' };
+        dispatch(addNode(newNode));
+      }
     },
     [dispatch, screenToFlowPosition]
   );
@@ -196,6 +221,15 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onNodesDelete={onNodesDelete}
+        onConnect={(params) => {
+          // If connecting from a schema field, ensure targetHandle is 'etl-input'
+          const edge = {
+            ...params,
+            type: 'customEtlEdge',
+            targetHandle: 'etl-input',
+          };
+          dispatch(setEdges([...edges, edge]));
+        }}
         proOptions={{ hideAttribution: true }}
       >
         <MiniMap />

@@ -54,6 +54,18 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.custom-edge {
+  z-index: 9999 !important;
+  filter: drop-shadow(0 0 2px #222) drop-shadow(0 0 2px #222);
+  pointer-events: stroke;
+}
+
+.react-flow__selection {
+  border: 2px dashed #1976d2 !important;
+  background: rgba(25, 118, 210, 0.10) !important;
+  box-shadow: 0 0 8px #1976d2;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

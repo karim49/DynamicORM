@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Handle, useNodeId, useReactFlow } from 'reactflow';
 import { Box, Typography, Checkbox } from '@mui/material';
 import SchemaFieldList from './SchemaFieldList';
@@ -19,7 +19,8 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
   {
     deleteElements({ nodes: [{ id: nodeId }] });
     // Remove file from Redux if this schema node represents a file
-    if (data.sourceName) {
+    if (data.sourceName)
+    {
       dispatch(removeFile(data.sourceName));
     }
   };
@@ -28,10 +29,23 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
   const [checked, setChecked] = useState(data.selectedFields || []);
   const [isSourceSelected, setIsSourceSelected] = useState(!!data.isSourceSelected); // for the main box
   const { setNodes } = useReactFlow();
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(40); // default min height
+  const fieldHeight = 32;
+
+  useLayoutEffect(() =>
+  {
+    if (headerRef.current)
+    {
+      const measured = headerRef.current.offsetHeight;
+      setHeaderHeight(measured > 0 ? measured : 40);
+    }
+  }, [viewOnly]);
 
   const handleToggle = (field) =>
   {
-    setChecked((prev) => {
+    setChecked((prev) =>
+    {
       const newChecked = prev.includes(field)
         ? prev.filter((f) => f !== field)
         : [...prev, field];
@@ -40,12 +54,12 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
         nodes.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  selectedFields: newChecked,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                selectedFields: newChecked,
+              },
+            }
             : node
         )
       );
@@ -55,11 +69,13 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
 
   const handleMainToggle = () =>
   {
-    setIsSourceSelected((prev) => {
+    setIsSourceSelected((prev) =>
+    {
       const newVal = !prev;
       // Persist to Redux (update only isSourceSelected)
       const node = nodes.find(n => n.id === nodeId);
-      if (node) {
+      if (node)
+      {
         dispatch(updateNode({
           ...node,
           data: {
@@ -78,7 +94,7 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
         padding: 2,
         border: '1px solid #e0e3e7',
         borderRadius: 3,
-        backgroundColor: highlight ? 'rgba(56, 142, 60, 0.15)' : (isSourceSelected ? 'rgba(234, 190, 57, 0.10)' : '#fff'),
+        backgroundColor: highlight ? 'rgba(56, 142, 60, 0.15)' : (isSourceSelected ? 'rgba(119, 234, 57, 0.1)' : 'rgba(255, 255, 255, 0.3)'),
         minWidth: 120,
         display: 'flex',
         flexDirection: 'column',
@@ -88,11 +104,11 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
         boxShadow: 2,
         maxWidth: 400,
         maxHeight: 500,
-        overflowY: 'auto',
+
         mb: 1,
       }}
     >
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box display="flex" alignItems="center" gap={1} ref={headerRef}>
         {!viewOnly && (
           <Checkbox
             checked={isSourceSelected}
@@ -111,7 +127,8 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
           <IconButton
             className="delete-icon"
             size="small"
-            onClick={e => {
+            onClick={e =>
+            {
               e.stopPropagation();
               handleDelete();
             }}
@@ -122,14 +139,18 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
           </IconButton>
         )}
       </Box>
-      <SchemaFieldList
-        fields={schema}
-        checked={checked}
-        onToggle={handleToggle}
-        viewOnly={viewOnly}
-      />
+      <Box sx={{ position: 'relative', width: '100%' }}>
+        {/* Render the field list (no handles inside) */}
+        <SchemaFieldList
+          fields={schema}
+          checked={checked}
+          onToggle={handleToggle}
+          viewOnly={viewOnly}
+        />
+
+      </Box>
       <Handle type="target" position="top" />
-      <Handle type="source" position="bottom" />
+      <Handle type="source" position="bottom" id="source" />
     </Box>
   );
 };

@@ -6,6 +6,12 @@ import
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CloseIcon from '@mui/icons-material/Close';
+import FunctionsIcon from '@mui/icons-material/Functions';
+import TransformIcon from '@mui/icons-material/Transform';
+import StorageIcon from '@mui/icons-material/Storage';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';  
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import { sourceMeta } from '../lib/sourceMeta';
 
 // Placeholder: fetch saved schemas from backend
@@ -186,6 +192,89 @@ const Sidebar = () =>
               ))}
             </Box>
           )}
+        </AccordionDetails>
+      </Accordion>
+      <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
+          <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
+            ETL
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          {/* Transform Subsection */}
+          <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
+              <TransformIcon sx={{ fontSize: 18, mr: 1 }} />
+              <Typography sx={{ fontSize: '.95rem', fontWeight: 600, color: '#b0b8c1' }}>Transform</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              {[{label: 'Aggregation', icon: <FunctionsIcon />}, {label: 'Replace', icon: <SyncAltIcon />}, {label: 'Filter', icon: <TableChartIcon />}, {label: 'Map', icon: <TransformIcon />}].map((etl, idx) => (
+                <Paper
+                  key={etl.label}
+                  elevation={0}
+                  sx={{
+                    p: 1.2,
+                    mb: 1,
+                    cursor: 'grab',
+                    userSelect: 'none',
+                    fontSize: '.9rem',
+                    bgcolor: '#2d323c',
+                    color: '#fff',
+                    borderRadius: 2,
+                    boxShadow: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    transition: 'background 0.2s',
+                    '&:hover': { bgcolor: '#3a3f4b' },
+                  }}
+                  draggable
+                  onDragStart={e => e.dataTransfer.setData('application/etl-fn', etl.label)}
+                  title={`Drag to canvas: ${etl.label}`}
+                >
+                  {etl.icon}
+                  {etl.label}
+                </Paper>
+              ))}
+            </AccordionDetails>
+          </Accordion>
+          {/* Load Subsection */}
+          <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0, mt: 1 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
+              <CloudUploadIcon sx={{ fontSize: 18, mr: 1 }} />
+              <Typography sx={{ fontSize: '.95rem', fontWeight: 600, color: '#b0b8c1' }}>Load</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              {[{label: 'JSON', icon: <TableChartIcon />}, {label: 'CSV', icon: <TableChartIcon />}, {label: 'Database', icon: <StorageIcon />}].map((load, idx) => (
+                <Paper
+                  key={load.label}
+                  elevation={0}
+                  sx={{
+                    p: 1.2,
+                    mb: 1,
+                    cursor: 'grab',
+                    userSelect: 'none',
+                    fontSize: '.9rem',
+                    bgcolor: '#2d323c',
+                    color: '#fff',
+                    borderRadius: 2,
+                    boxShadow: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    transition: 'background 0.2s',
+                    '&:hover': { bgcolor: '#3a3f4b' },
+                  }}
+                  draggable
+                  onDragStart={e => e.dataTransfer.setData('application/etl-load', load.label)}
+                  title={`Drag to canvas: ${load.label}`}
+                >
+                  {load.icon}
+                  {load.label}
+                </Paper>
+              ))}
+            </AccordionDetails>
+          </Accordion>
         </AccordionDetails>
       </Accordion>
     </Box>
