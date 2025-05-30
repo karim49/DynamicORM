@@ -11,7 +11,10 @@ const filesSlice = createSlice({
         state.push(action.payload);
       }
     },
-    removeFile: (state, action) => state.filter(f => f.originalName !== action.payload),
+    removeFile: (state, action) => {
+      const idx = state.findIndex(f => f.originalName === action.payload);
+      if (idx !== -1) state.splice(idx, 1);
+    },
     setFiles: (state, action) => action.payload,
   },
 });

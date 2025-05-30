@@ -25,6 +25,38 @@ export async function sendSchemaDataApi(data) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ data }),
   });
-  if (!response.ok) throw new Error('Submission failed');
+  if (!response.ok) {
+    let errorMsg = 'Submission failed';
+    try {
+      const err = await response.json();
+      errorMsg = err.message || JSON.stringify(err) || errorMsg;
+    } catch (e) {
+      // fallback: try text
+      try {
+        errorMsg = await response.text();
+      } catch {}
+    }
+    throw new Error(errorMsg);
+  }
+  return response.json();
+}
+
+export async function fetchSampleRecordApi(pipeline) {
+  // This endpoint should apply the pipeline to a sample record and return the result (no transaction)
+  const response = await fetch(`${import.meta.env.VITE_BEAPI}/api/sampleRecord`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(pipeline),
+  });
+  if (!response.ok) {
+    let errorMsg = 'Failed to fetch sample record';
+    try {
+      const err = await response.json();
+      errorMsg = err.message || JSON.stringify(err) || errorMsg;
+    } catch {
+      try { errorMsg = await response.text(); } catch { /* ignore */ }
+    }
+    throw new Error(errorMsg);
+  }
   return response.json();
 }

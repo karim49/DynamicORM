@@ -26,6 +26,9 @@ const Sidebar = () =>
 {
   const [schemas, setSchemas] = useState([]);
   const [savedSchemas, setSavedSchemas] = useState([]);
+  const [expanded, setExpanded] = useState(null);
+  const [etlExpanded, setEtlExpanded] = useState(null);
+
   useEffect(() => {
     fetchSavedSchemas()
       .then(data => setSavedSchemas(data))
@@ -64,6 +67,16 @@ const Sidebar = () =>
     }
   };
 
+  // Helper for main accordions
+  const handleAccordionChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : null);
+  };
+
+  // Track which sub-accordion is expanded for each section (optional, for nested accordions)
+  const handleEtlAccordionChange = (panel) => (event, isExpanded) => {
+    setEtlExpanded(isExpanded ? panel : null);
+  };
+
   return (
     <Box
       sx={{
@@ -81,7 +94,7 @@ const Sidebar = () =>
         gap: 2,
       }}
     >
-      <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+      <Accordion expanded={expanded === 'dataSources'} onChange={handleAccordionChange('dataSources')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
           <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
             Data Sources
@@ -123,7 +136,7 @@ const Sidebar = () =>
           ))}
         </AccordionDetails>
       </Accordion>
-      <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+      <Accordion expanded={expanded === 'schemas'} onChange={handleAccordionChange('schemas')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
           <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
             Schemas
@@ -194,7 +207,7 @@ const Sidebar = () =>
           )}
         </AccordionDetails>
       </Accordion>
-      <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+      <Accordion expanded={expanded === 'etl'} onChange={handleAccordionChange('etl')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
           <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
             ETL
@@ -202,7 +215,7 @@ const Sidebar = () =>
         </AccordionSummary>
         <AccordionDetails sx={{ p: 0 }}>
           {/* Transform Subsection */}
-          <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+          <Accordion expanded={etlExpanded === 'transform'} onChange={handleEtlAccordionChange('transform')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
               <TransformIcon sx={{ fontSize: 18, mr: 1 }} />
               <Typography sx={{ fontSize: '.95rem', fontWeight: 600, color: '#b0b8c1' }}>Transform</Typography>
@@ -239,7 +252,7 @@ const Sidebar = () =>
             </AccordionDetails>
           </Accordion>
           {/* Load Subsection */}
-          <Accordion defaultExpanded={false} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0, mt: 1 }}>
+          <Accordion expanded={etlExpanded === 'load'} onChange={handleEtlAccordionChange('load')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0, mt: 1 }}>
             <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
               <CloudUploadIcon sx={{ fontSize: 18, mr: 1 }} />
               <Typography sx={{ fontSize: '.95rem', fontWeight: 600, color: '#b0b8c1' }}>Load</Typography>

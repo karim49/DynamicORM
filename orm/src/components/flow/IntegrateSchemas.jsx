@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import {sendSchemaDataApi} from '../api/nodeHelpers';
+import { sendSchemaDataApi } from '../api/nodeHelpers';
 import { addNode } from '../../store/slices/nodesSlice';
 import { addEdge } from '../../store/slices/edgesSlice';
 
@@ -87,15 +87,12 @@ const IntegrateSchemas = ({ setAlertMsg, setAlertOpen }) => {
   };
 
   return (
-    <Button
-      size="small"
-      variant="contained"
-      color="primary"
-      style={{ margin: '5px' }}
-      onClick={handleClick}
-    >
+
+    //  <Box sx={{ mb: 3 }}>
+    <Button variant="outlined" color="success" fullWidth onClick={handleClick}>
       Integrate Schemas
     </Button>
+
   );
 };
 

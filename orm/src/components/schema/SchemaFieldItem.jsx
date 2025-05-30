@@ -9,6 +9,19 @@ const SchemaFieldItem = ({ field, checked, onToggle, viewOnly = false }) => {
   const fieldId = typeof field === 'object' && field !== null ? field.field : String(field);
   // Check if this field's handle is connected (outgoing edge from this node and handle)
   const isConnected = edges.some(e => e.source === nodeId && e.sourceHandle === fieldId);
+  // The checkbox should be checked ONLY if selected by user or if connected
+  const displayChecked = !!isConnected || !!checked;
+
+  // Check if this field's handle is connected to any ETL node (etlTransformNode or etlLoadNode)
+  const etlNodeIds = useSelector(state =>
+    state.nodes.filter(n => n.type === 'etlTransformNode' || n.type === 'etlLoadNode').map(n => n.id)
+  );
+  // Is there an edge from this field to any ETL node?
+  const isEtlConnected = edges.some(e =>
+    e.source === nodeId && e.sourceHandle === fieldId && etlNodeIds.includes(e.target)
+  );
+  // The handle is green if connected to any ETL node, else blue if connected elsewhere, else default
+  const handleColor = isEtlConnected ? '#43a047' : (isConnected ? '#1976d2' : '#bdbdbd');
 
   return (
     <ListItem
@@ -25,7 +38,7 @@ const SchemaFieldItem = ({ field, checked, onToggle, viewOnly = false }) => {
     >
       {!viewOnly && (
         <Checkbox
-          checked={checked}
+          checked={displayChecked}
           onChange={() => onToggle(field)}
           edge="start"
           size="small"
@@ -40,7 +53,7 @@ const SchemaFieldItem = ({ field, checked, onToggle, viewOnly = false }) => {
           style={{
             width: 12,
             height: 12,
-            background: isConnected ? '#43a047' : '#1976d2',
+            background: handleColor,
             borderRadius: 6,
             border: '2px solid #fff',
             marginLeft: 8,

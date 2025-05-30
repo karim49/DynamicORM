@@ -2,9 +2,8 @@ import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 import FlowRenderer from './FlowRenderer';
 import NodeModals from '../modal/NodeModals';
-import useFlowHandlers from './flowHandler';
 import { Background } from 'reactflow';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
 
 const MainFlow = ({ setAlertMsg, setAlertOpen }) =>
@@ -20,7 +19,7 @@ const MainFlow = ({ setAlertMsg, setAlertOpen }) =>
     <Box
       sx={{
         flex: 1,
-        height: '95vh',
+        height: '93vh',
         background: 'linear-gradient(135deg, #e9ecef 0%, #f4f6f8 100%)',
         position: 'relative',
         overflow: 'hidden',

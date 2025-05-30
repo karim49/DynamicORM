@@ -7,7 +7,7 @@ import { useDispatch } from 'react-redux';
 import { removeNode } from '../../store/slices/nodesSlice';
 import { sendSchemaDataApi } from '../api/nodeHelpers';
         
-const IntegratedNode = ({ id, data }) => {
+const IntegratedNode = ({ id, data, onDeleteNode }) => {
     const [menuAnchor, setMenuAnchor] = useState(null);
     const [saveMenuAnchor, setSaveMenuAnchor] = useState(null);
     const [checked, setChecked] = useState([]);
@@ -15,10 +15,6 @@ const IntegratedNode = ({ id, data }) => {
     const schemaItems = data.schema || [];
     const allChecked = checked.length === schemaItems.length && schemaItems.length > 0;
 
-    const handleDelete = (e) => {
-        e.stopPropagation();
-        dispatch(removeNode(id));
-    };
     const handleContextMenu = (event) => {
         event.preventDefault();
         setMenuAnchor(event.currentTarget);
@@ -42,7 +38,7 @@ const IntegratedNode = ({ id, data }) => {
             // Replace with your backend endpoint and payload as needed
             await sendSchemaDataApi(selectedItems);
             alert('Submitted selected items!');
-        } catch (e) {
+        } catch {
             alert('Failed to submit selected items.');
         }
         setMenuAnchor(null);
@@ -95,7 +91,7 @@ const IntegratedNode = ({ id, data }) => {
         try {
             await sendSchemaDataApi(selectedItems);
             alert('Saved in DB!');
-        } catch (e) {
+        } catch {
             alert('Failed to save in DB.');
         }
         setSaveMenuAnchor(null);
@@ -107,15 +103,23 @@ const IntegratedNode = ({ id, data }) => {
                 padding: 2,
                 border: '1px solid #e0e3e7',
                 borderRadius: 3,
-                backgroundColor: '#fff',
+                background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
                 minWidth: 180,
                 maxWidth: 420,
                 maxHeight: 320,
-                // overflowY: 'auto',
-                boxShadow: 2,
+                boxShadow: '0 4px 16px 0 rgba(60,72,100,0.18), 0 1.5px 4px 0 rgba(60,72,100,0.12)',
                 position: 'relative',
                 mb: 2,
                 userSelect: 'none',
+                borderTop: '2.5px solid #a5d6a7',
+                borderLeft: '2.5px solid #fff',
+                borderRight: '2.5px solid #b0b8c1',
+                borderBottom: '2.5px solid #b0b8c1',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+                '&:hover': {
+                  transform: 'scale(1.035)',
+                  boxShadow: '0 8px 32px 0 rgba(60,72,100,0.28), 0 3px 8px 0 rgba(60,72,100,0.18)',
+                },
             }}
             onContextMenu={handleContextMenu}
         >
@@ -129,7 +133,7 @@ const IntegratedNode = ({ id, data }) => {
                 <IconButton
                     className="delete-icon"
                     size="small"
-                    onClick={handleDelete}
+                    onClick={e => { e.stopPropagation(); data.onDeleteNode?.(id); }}
                     aria-label="Delete node"
                     sx={{ color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
                 >

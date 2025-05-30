@@ -1,58 +1,133 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Handle } from 'reactflow';
-import { useDispatch } from 'react-redux';
-import { setNodes } from '../../store/slices/nodesSlice';
+import ReplaceFunctionDialog from '../modal/ReplaceFunctionDialog';
+import AggregationFunctionDialog from '../modal/AggregationFunctionDialog';
+import FilterFunctionDialog from '../modal/FilterFunctionDialog';
+import MapFunctionDialog from '../modal/MapFunctionDialog';
 import { useSelector } from 'react-redux';
 
 const EtlTransformNode = ({ id, data }) => {
-  const dispatch = useDispatch();
-  const nodes = useSelector(state => state.nodes);
-  const edges = useSelector(state => state.edges);
-  // Check if this node's left handle is connected
-  const isConnected = edges.some(e => e.target === id && (e.targetHandle === 'etl-input' || !e.targetHandle));
-  const handleDelete = (e) => {
-    e.stopPropagation();
-    dispatch(setNodes(nodes.filter(n => n.id !== id)));
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [replaceParams, setReplaceParams] = useState(data?.params || {});
+  // Determine dialog type
+  const isAggregation = (data.label || '').toLowerCase() === 'aggregation';
+  const isFilter = (data.label || '').toLowerCase() === 'filter';
+  const isMap = (data.label || '').toLowerCase() === 'map';
+
+  const handleDialogSave = (newParams) => {
+    setReplaceParams(newParams);
+    // Additional save logic if needed
   };
-  // Find all incoming edges to this node
-  const incoming = edges.filter(e => e.target === id);
-  // Check if this node has any incoming edges
-  const hasIncomingEdges = edges.some(e => e.target === id);
+
+  // Fetch edges from Redux state
+  const edges = useSelector(state => state.edges);
+
+  // Determine connection state dynamically
+  const isInputConnected = edges.some(edge => edge.target === id);
+  const isOutputConnected = edges.some(edge => edge.source === id);
+
+  const inputHandleStyle = {
+    left: 0,
+    top: '50%',
+    width: 10,
+    height: 10,
+    background: isInputConnected ? '#43a047' : '#bdbdbd',
+    borderRadius: 5,
+    border: '2px solid #fff',
+  };
+
+  const outputHandleStyle = {
+    right: 0,
+    top: '50%',
+    width: 10,
+    height: 10,
+    background: isOutputConnected ? '#43a047' : '#bdbdbd',
+    borderRadius: 5,
+    border: '2px solid #fff',
+  };
+
   return (
-    <Box
-      sx={{
-        padding: 2,
-        border: '1px solid #e0e3e7',
-        borderRadius: 3,
-        backgroundColor: hasIncomingEdges ? '#b9f6ca' : '#e3f2fd',
-        minWidth: 120,
-        display: 'flex',
-        alignItems: 'center',
-        userSelect: 'none',
-        position: 'relative',
-        boxShadow: 2,
-        height: 'auto',
-        mb: 1,
-      }}
-    >
-      <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#1976d2', flex: 1 }}>
-        {data.label}
-      </Typography>
-      <IconButton
-        className="delete-icon"
-        size="small"
-        onClick={handleDelete}
-        aria-label="Delete node"
-        sx={{ ml: '1rem', color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
+    <>
+      <Box
+        sx={{
+          padding: 2,
+          border: '1px solid #e0e3e7',
+          borderRadius: 3,
+          background: 'linear-gradient(135deg, #e0ecff 0%, #f8fafc 100%)',
+          minWidth: 120,
+          display: 'flex',
+          alignItems: 'center',
+          userSelect: 'none',
+          position: 'relative',
+          boxShadow: '0 4px 16px 0 rgba(60,72,100,0.18), 0 1.5px 4px 0 rgba(60,72,100,0.12)',
+          height: 'auto',
+          mb: 1,
+          borderTop: '2.5px solid #b2cfff',
+          borderLeft: '2.5px solid #fff',
+          borderRight: '2.5px solid #b0b8c1',
+          borderBottom: '2.5px solid #b0b8c1',
+          cursor: 'pointer',
+          transition: 'transform 0.15s, box-shadow 0.15s',
+          '&:hover': {
+            transform: 'scale(1.035)',
+            boxShadow: '0 8px 32px 0 rgba(60,72,100,0.28), 0 3px 8px 0 rgba(60,72,100,0.18)',
+          },
+        }}
+        onClick={() => setDialogOpen(true)}
       >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
-      <Handle type="target" position="left" id="etl-input" style={{ left: 0, top: '50%', width: 10, height: 10, background: isConnected ? '#43a047' : '#1976d2', borderRadius: 5, border: '2px solid #fff' }} />
-      <Handle type="target" position="top" />
-      <Handle type="source" position="bottom" />
-    </Box>
+        <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: '#1976d2', flex: 1 }}>
+          {data.label}
+        </Typography>
+        <IconButton
+          className="delete-icon"
+          size="small"
+          onClick={e => { e.stopPropagation(); data.onDeleteNode?.(id); }}
+          aria-label="Delete node"
+          sx={{ ml: '1rem', color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+        <Handle type="target" position="left" id="etl-input" style={inputHandleStyle} />
+        <Handle type="source" position="right" id="etl-output" style={outputHandleStyle} />
+      </Box>
+      {isAggregation ? (
+        <AggregationFunctionDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSave={handleDialogSave}
+          initialFields={replaceParams.fields}
+          initialOperation={replaceParams.operation || 'sum'}
+        />
+      ) : isFilter ? (
+        <FilterFunctionDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSave={handleDialogSave}
+          initialField={replaceParams.field}
+          initialOperator={replaceParams.operator || '=='}
+          initialValue={replaceParams.value || ''}
+        />
+      ) : isMap ? (
+        <MapFunctionDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSave={handleDialogSave}
+          initialField={replaceParams.field}
+          initialExpression={replaceParams.expression || ''}
+        />
+      ) : (
+        <ReplaceFunctionDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSave={handleDialogSave}
+          initialValue={replaceParams.input}
+          initialSearch={replaceParams.searchValue || ''}
+          initialReplace={replaceParams.replaceValue || ''}
+        />
+      )}
+    </>
   );
 };
 

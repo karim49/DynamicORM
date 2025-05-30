@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setNodes, addNode } from '../../store/slices/nodesSlice';
 import { setEdges } from '../../store/slices/edgesSlice';
 import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
+import { removeFile } from '../../store/slices/filesSlice';
 
 
 
@@ -17,41 +18,46 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
   const dispatch = useDispatch();
   const { screenToFlowPosition } = useReactFlow();
 
+  // Helper: recursively collect all descendants (targets) of a node
+  const findAllDescendants = useCallback((startId) => {
+    const descendants = new Set();
+    const queue = [startId];
+    while (queue.length > 0) {
+      const current = queue.shift();
+      edges.forEach(edge => {
+        if (edge.source === current && !descendants.has(edge.target)) {
+          descendants.add(edge.target);
+          queue.push(edge.target);
+        }
+      });
+    }
+    return Array.from(descendants);
+  }, [edges]);
+
   const onNodesChange = useCallback(
     (changes) => {
-      // Custom: If a dataSourceNode moves, move all its descendants by the same delta
+      // Find all position changes
       const posChanges = changes.filter((c) => c.type === 'position' && c.position);
       if (posChanges.length > 0) {
         let updatedNodes = [...nodes];
+        // If any node is moved, move all nodes connected to it as a group
         posChanges.forEach((change) => {
           const node = updatedNodes.find((n) => n.id === change.id);
           if (!node) return;
-          // Only apply descendant-move logic to dataSourceNode
-          if (node.type === 'dataSourceNode') {
-            const dx = change.position.x - node.position.x;
-            const dy = change.position.y - node.position.y;
-            // Move the parent node
+          const dx = change.position.x - node.position.x;
+          const dy = change.position.y - node.position.y;
+          // Check if node is a source (has outgoing edges)
+          const isSource = edges.some(e => e.source === node.id);
+          if (isSource) {
+            // Move all descendants (targets) with the source
+            const descendants = findAllDescendants(node.id);
             updatedNodes = updatedNodes.map(n =>
-              n.id === node.id ? { ...n, position: { ...change.position } } : n
+              n.id === node.id || descendants.includes(n.id)
+                ? { ...n, position: { x: n.position.x + dx, y: n.position.y + dy } }
+                : n
             );
-            // Recursively move all descendants immutably
-            const moveChildren = (parentId) => {
-              updatedNodes = updatedNodes.map((n) => {
-                if (n.data?.parentId === parentId) {
-                  const newPos = {
-                    x: n.position.x + dx,
-                    y: n.position.y + dy,
-                  };
-                  updatedNodes = moveChildren(n.id);
-                  return { ...n, position: newPos };
-                }
-                return n;
-              });
-              return updatedNodes;
-            };
-            updatedNodes = moveChildren(node.id);
           } else {
-            // For non-dataSourceNode, just move the node itself (child can move alone)
+            // Only move the node itself
             updatedNodes = updatedNodes.map(n =>
               n.id === node.id ? { ...n, position: { ...change.position } } : n
             );
@@ -68,7 +74,7 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
       // Default: just apply changes
       dispatch(setNodes(applyNodeChanges(changes, nodes)));
     },
-    [dispatch, nodes]
+    [dispatch, nodes, edges, findAllDescendants]
   );
 
   const onEdgesChange = useCallback(
@@ -80,46 +86,84 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
   );
 
   const onNodeClick = useCallback(
-    (event, node) =>
-    {
-      // Ignore clicks on the delete icon
+    (event, node) => {
       if (event.target.closest('.delete-icon')) return;
-      // Ignore clicks on nodes with label 'SchemaNode'
       if (node?.type === 'SchemaNode') return;
-      // Log the nodes from Redux state
-      console.log('Redux nodes:', nodes);
-      dispatch(setSelectedNode(node));
+      // Remove non-serializable fields before storing in Redux
+      const { data, ...rest } = node;
+      // eslint-disable-next-line no-unused-vars
+      const { onDeleteNode, ...serializableData } = data || {};
+      dispatch(setSelectedNode({ ...rest, data: serializableData }));
       dispatch(setOpenModal(true));
     },
-    [dispatch, nodes]
+    [dispatch]
   );
 
   const onNodesDelete = useCallback(
-    (deletedNodes) =>
-    {
-      // deletedNodes is an array of node objects
+    (deletedNodes) => {
+      // Collect all nodes to delete (including descendants)
       const toDelete = new Set();
-      const collectDescendants = (id) =>
-      {
+      const collectDescendants = (id) => {
         toDelete.add(id);
-        edges.forEach(edge =>
-        {
-          if (edge.source === id && !toDelete.has(edge.target))
-          {
+        edges.forEach(edge => {
+          if (edge.source === id && !toDelete.has(edge.target)) {
             collectDescendants(edge.target);
           }
         });
       };
       deletedNodes.forEach(node => collectDescendants(node.id));
 
-      // Remove nodes
+      // Remove nodes and edges connected to deleted nodes
       const remainingNodes = nodes.filter(node => !toDelete.has(node.id));
-      dispatch(setNodes(remainingNodes));
-
-      // Remove edges connected to deleted nodes
       const remainingEdges = edges.filter(
         edge => !toDelete.has(edge.source) && !toDelete.has(edge.target)
       );
+
+      // --- Remove uploaded file for every deleted schema node (including descendants) ---
+      nodes.filter(n => toDelete.has(n.id) && n.type === 'schemaNode' && n.data?.sourceName)
+        .forEach(n => dispatch(removeFile(n.data.sourceName)));
+
+      // --- If any deleted node is a transform or load node, reset ALL schema node selectedFields to [] and force UI update ---
+      // (ETL node: etlTransformNode or etlLoadNode)
+      const deletedEtl = deletedNodes.some(n => n.type === 'etlTransformNode' || n.type === 'etlLoadNode');
+      let updatedNodes = remainingNodes;
+      if (deletedEtl) {
+        updatedNodes = remainingNodes.map(node => {
+          if (node.type === 'schemaNode') {
+            // Also force a new array reference for selectedFields to trigger React update
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                selectedFields: [],
+              },
+            };
+          }
+          return node;
+        });
+      } else {
+        // If not ETL node, recompute selectedFields based on remaining edges
+        updatedNodes = remainingNodes.map(node => {
+          if (node.type === 'schemaNode') {
+            const schemaFields = Array.isArray(node.data.schema) ? node.data.schema : [];
+            const filteredFields = schemaFields.filter(field => {
+              const fieldId = typeof field === 'object' && field !== null ? field.field : String(field);
+              return remainingEdges.some(e => e.source === node.id && e.sourceHandle === fieldId);
+            });
+            // Always return a new array reference
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                selectedFields: [...filteredFields],
+              },
+            };
+          }
+          return node;
+        });
+      }
+      // Force a new array reference for nodes to ensure React/Redux update
+      dispatch(setNodes([...updatedNodes]));
       dispatch(setEdges(remainingEdges));
     },
     [dispatch, nodes, edges]
@@ -209,11 +253,28 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
     return () => window.removeEventListener('openLoadedSchema', handleOpenLoadedSchema);
   }, [dispatch]);
 
+  // Centralized node delete handler
+  const onDeleteNode = useCallback((id) => {
+    const node = nodes.find(n => n.id === id);
+    if (!node) return;
+    // Call onNodesDelete with the node and its type
+    onNodesDelete([{ id: node.id, type: node.type }]);
+  }, [nodes, onNodesDelete]);
+
+  // Helper to inject onDeleteNode into node data for rendering only
+  const nodesWithDelete = nodes.map(node => {
+    // Never mutate the Redux state! Only inject for rendering
+    return {
+      ...node,
+      data: { ...node.data, onDeleteNode },
+    };
+  });
+
   // Pass alert handlers to IntegrateSchemas
   return (
     <div style={{ width: '100%', height: '100%' }} onDrop={onDrop} onDragOver={onDragOver}>
       <ReactFlow
-        nodes={nodes}
+        nodes={nodesWithDelete}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -222,8 +283,26 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         edgeTypes={edgeTypes}
         onNodesDelete={onNodesDelete}
         onConnect={(params) => {
+          // Find the target node to determine its type
+          const targetNode = nodes.find(n => n.id === params.target);
+          if (targetNode && targetNode.type === 'etlTransformNode') {
+            const label = targetNode.data?.label?.toLowerCase?.() || '';
+            if (label === 'replace') {
+              // Count how many edges already connect to this node
+              const incoming = edges.filter(e => e.target === params.target && e.targetHandle === 'etl-input');
+              if (incoming.length >= 1) {
+                if (setAlertMsg && setAlertOpen) {
+                  setAlertMsg('Replace transform can only be connected to one source field.');
+                  setAlertOpen(true);
+                }
+                return; // Prevent connection
+              }
+            }
+            // Add more transform type rules here if needed
+          }
           // If connecting from a schema field, ensure targetHandle is 'etl-input'
           const edge = {
+            id: `edge-${Date.now()}-${Math.random()}`,
             ...params,
             type: 'customEtlEdge',
             targetHandle: 'etl-input',
@@ -233,8 +312,7 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         proOptions={{ hideAttribution: true }}
       >
         <MiniMap />
-        <Controls>
-        </Controls>
+        <Controls />
         <Background color="green" gap={16} />
       </ReactFlow>
     </div>

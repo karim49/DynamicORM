@@ -1,46 +1,38 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { Handle, useNodeId, useReactFlow } from 'reactflow';
+import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, Checkbox } from '@mui/material';
 import SchemaFieldList from './SchemaFieldList';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
-import { useDispatch } from 'react-redux';
-import { removeFile } from '../../store/slices/filesSlice';
-import { useSelector } from 'react-redux';
 import { updateNode } from '../../store/slices/nodesSlice';
 
-const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
+const SchemaNode = ({ id, data, viewOnly = false }) =>
 {
-  const { deleteElements } = useReactFlow();
-  const nodeId = useNodeId();
+  // Always call hooks in the same order
+  const reactFlowNodeId = useNodeId();
+  const nodeId = id !== undefined ? id : reactFlowNodeId;
   const dispatch = useDispatch();
   const nodes = useSelector(state => state.nodes);
-  const handleDelete = () =>
-  {
-    deleteElements({ nodes: [{ id: nodeId }] });
-    // Remove file from Redux if this schema node represents a file
-    if (data.sourceName)
-    {
-      dispatch(removeFile(data.sourceName));
-    }
-  };
-  const { schema = [] } = data;
-
   const [checked, setChecked] = useState(data.selectedFields || []);
-  const [isSourceSelected, setIsSourceSelected] = useState(!!data.isSourceSelected); // for the main box
+  const [isSourceSelected, setIsSourceSelected] = useState(!!data.isSourceSelected);
   const { setNodes } = useReactFlow();
   const headerRef = useRef(null);
-  const [headerHeight, setHeaderHeight] = useState(40); // default min height
-  const fieldHeight = 32;
 
   useLayoutEffect(() =>
   {
     if (headerRef.current)
     {
-      const measured = headerRef.current.offsetHeight;
-      setHeaderHeight(measured > 0 ? measured : 40);
+      // const measured = headerRef.current.offsetHeight;
+      // setHeaderHeight(measured > 0 ? measured : 40);
     }
   }, [viewOnly]);
+
+  // Sync checked state with Redux node data (selectedFields)
+  React.useEffect(() =>
+  {
+    setChecked(data.selectedFields || []);
+  }, [data.selectedFields]);
 
   const handleToggle = (field) =>
   {
@@ -94,18 +86,26 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
         padding: 2,
         border: '1px solid #e0e3e7',
         borderRadius: 3,
-        backgroundColor: highlight ? 'rgba(56, 142, 60, 0.15)' : (isSourceSelected ? 'rgba(119, 234, 57, 0.1)' : 'rgba(255, 255, 255, 0.3)'),
+        background: 'linear-gradient(135deg, #f0f4c3 0%, #e3f2fd 100%)',
         minWidth: 120,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
         userSelect: 'none',
         position: 'relative',
-        boxShadow: 2,
+        boxShadow: '0 4px 16px 0 rgba(60,72,100,0.18), 0 1.5px 4px 0 rgba(60,72,100,0.12)',
         maxWidth: 400,
         maxHeight: 500,
-
         mb: 1,
+        borderTop: '2.5px solid #fff59d',
+        borderLeft: '2.5px solid #fff',
+        borderRight: '2.5px solid #b0b8c1',
+        borderBottom: '2.5px solid #b0b8c1',
+        transition: 'transform 0.15s, box-shadow 0.15s',
+        '&:hover': {
+          transform: 'scale(1.035)',
+          boxShadow: '0 8px 32px 0 rgba(60,72,100,0.28), 0 3px 8px 0 rgba(60,72,100,0.18)',
+        },
       }}
     >
       <Box display="flex" alignItems="center" gap={1} ref={headerRef}>
@@ -127,10 +127,9 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
           <IconButton
             className="delete-icon"
             size="small"
-            onClick={e =>
-            {
+            onClick={e => {
               e.stopPropagation();
-              handleDelete();
+              data.onDeleteNode?.(nodeId);
             }}
             aria-label="Delete node"
             sx={{ ml: '1rem', color: '#b71c1c', '&:hover': { color: '#f44336', bgcolor: '#fbe9e7' } }}
@@ -142,12 +141,11 @@ const SchemaNode = ({ data, viewOnly = false, highlight = false }) =>
       <Box sx={{ position: 'relative', width: '100%' }}>
         {/* Render the field list (no handles inside) */}
         <SchemaFieldList
-          fields={schema}
+          fields={data.schema || []}
           checked={checked}
           onToggle={handleToggle}
           viewOnly={viewOnly}
         />
-
       </Box>
       <Handle type="target" position="top" />
       <Handle type="source" position="bottom" id="source" />
