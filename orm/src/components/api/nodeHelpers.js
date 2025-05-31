@@ -60,3 +60,22 @@ export async function fetchSampleRecordApi(pipeline) {
   }
   return response.json();
 }
+
+export async function sendConfigurationApi(config) {
+  const response = await fetch(`${import.meta.env.VITE_BEAPI}/api/etl/configuration`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  });
+  if (!response.ok) {
+    let errorMsg = 'Failed to send configuration';
+    try {
+      const err = await response.json();
+      errorMsg = err.message || JSON.stringify(err) || errorMsg;
+    } catch {
+      try { errorMsg = await response.text(); } catch { /* ignore */ }
+    }
+    throw new Error(errorMsg);
+  }
+  return response.json();
+}

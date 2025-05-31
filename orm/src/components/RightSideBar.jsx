@@ -7,7 +7,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Background } from 'reactflow';
 import IntegrateSchemas from './flow/IntegrateSchemas';
 import { buildPipeline } from '../utils/pipelineBuilder';
-import { fetchSampleRecordApi } from './api/nodeHelpers';
+import { fetchSampleRecordApi, sendConfigurationApi } from './api/nodeHelpers';
         
 const FloatingButton = ({ setAlertMsg, setAlertOpen }) =>
 {
@@ -160,19 +160,13 @@ const RightSidebar = ({ setAlertMsg, setAlertOpen }) =>
 
     const handleSubmit = async (pipeline) =>
     {
-        // TODO: Replace with your backend API call
         try
         {
-            const res = await fetch('/api/processPipeline', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pipeline),
-            });
-            if (!res.ok) throw new Error('Failed to submit pipeline');
+            await sendConfigurationApi(pipeline);
             setAlertMsg && setAlertMsg('Pipeline submitted successfully!');
             setAlertOpen && setAlertOpen(true);
             setShowModal(false);
-        } catch (e)
+        } catch
         {
             setAlertMsg && setAlertMsg('Pipeline submission failed.');
             setAlertOpen && setAlertOpen(true);
