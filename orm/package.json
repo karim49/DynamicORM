@@ -12,6 +12,7 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
+    "etl": "^0.8.0",
     "express": "^5.1.0",
     "file-type": "^20.5.0",
     "mime-types": "^3.0.1",

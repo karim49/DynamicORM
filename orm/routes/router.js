@@ -3,6 +3,7 @@ import multer from 'multer';
 import { handleConnection } from '../controllers/connectionController.js';
 import { handleFileUpload } from '../controllers/uploadController.js';
 import { handleSelectedSchema} from '../controllers/handleSchema.js';
+import { runETL } from '../controllers/etlController.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -29,5 +30,6 @@ const upload = multer({ storage: storage });
 router.post('/connection', handleConnection);
 router.post('/uploadFile', upload.single('file'), handleFileUpload);
 router.post('/handleSelectedSchema', handleSelectedSchema);
+router.post('/etl/configuration', runETL);
 
 export default router;
