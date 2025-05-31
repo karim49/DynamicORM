@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ListItem, ListItemText, Checkbox } from '@mui/material';
 import { Handle, useNodeId } from 'reactflow';
 import { useSelector } from 'react-redux';
@@ -13,8 +13,11 @@ const SchemaFieldItem = ({ field, checked, onToggle, viewOnly = false }) => {
   const displayChecked = !!isConnected || !!checked;
 
   // Check if this field's handle is connected to any ETL node (etlTransformNode or etlLoadNode)
-  const etlNodeIds = useSelector(state =>
-    state.nodes.filter(n => n.type === 'etlTransformNode' || n.type === 'etlLoadNode').map(n => n.id)
+  const nodes = useSelector(state => state.nodes);
+  // Memoize etlNodeIds to avoid selector warning
+  const etlNodeIds = useMemo(
+    () => nodes.filter(n => n.type === 'etlTransformNode' || n.type === 'etlLoadNode').map(n => n.id),
+    [nodes]
   );
   // Is there an edge from this field to any ETL node?
   const isEtlConnected = edges.some(e =>
