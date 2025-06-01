@@ -310,10 +310,29 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
           dispatch(setEdges([...edges, edge]));
         }}
         proOptions={{ hideAttribution: true }}
+        style={{
+          background: 'radial-gradient(ellipse at 60% 40%, #f4f6fa 70%, #e3eaf7 100%)',
+          boxShadow: '0 8px 32px 0 rgba(60,72,100,0.10), 0 2px 8px 0 rgba(60,72,100,0.08)',
+          position: 'relative',
+        }}
       >
         <MiniMap />
         <Controls />
-        <Background color="green" gap={16} />
+        <Background
+          color="rgba(54, 96, 195, 0.44)"
+          gap={18}
+          size={1.5}
+          // variant="lines"
+        />
+        {/* Vignette overlay for 3D depth */}
+        <div style={{
+          pointerEvents: 'none',
+          position: 'absolute',
+          color: 'rgba(52, 100, 211, 0.78)',
+          inset: 0,
+          zIndex: 2,
+          background: 'rgba(0, 0, 0, 0.07)',
+        }} />
       </ReactFlow>
     </div>
   );

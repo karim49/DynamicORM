@@ -100,25 +100,25 @@ const IntegratedNode = ({ id, data, onDeleteNode }) => {
     return (
         <Box
             sx={{
-                padding: 2,
-                border: '1px solid #e0e3e7',
-                borderRadius: 3,
-                background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%)',
+                padding: 2.5,
+                border: '1.5px solid #e0e3e7',
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 60%, #e3f0ff 100%)',
                 minWidth: 180,
                 maxWidth: 420,
                 maxHeight: 320,
-                boxShadow: '0 4px 16px 0 rgba(60,72,100,0.18), 0 1.5px 4px 0 rgba(60,72,100,0.12)',
+                boxShadow: '0 8px 32px 0 rgba(60,72,100,0.22), 0 2px 8px 0 rgba(60,72,100,0.12), 0 0.5px 1.5px 0 #fff inset',
                 position: 'relative',
                 mb: 2,
                 userSelect: 'none',
-                borderTop: '2.5px solid #a5d6a7',
-                borderLeft: '2.5px solid #fff',
-                borderRight: '2.5px solid #b0b8c1',
-                borderBottom: '2.5px solid #b0b8c1',
-                transition: 'transform 0.15s, box-shadow 0.15s',
+                borderTop: '3px solid #a5d6a7',
+                borderLeft: '3px solid #fff',
+                borderRight: '3px solid #b0b8c1',
+                borderBottom: '3px solid #b0b8c1',
+                transition: 'transform 0.18s, box-shadow 0.18s',
                 '&:hover': {
-                  transform: 'scale(1.035)',
-                  boxShadow: '0 8px 32px 0 rgba(60,72,100,0.28), 0 3px 8px 0 rgba(60,72,100,0.18)',
+                  transform: 'scale(1.045) translateY(-2px)',
+                  boxShadow: '0 16px 48px 0 rgba(60,72,100,0.28), 0 6px 18px 0 rgba(60,72,100,0.18)',
                 },
             }}
             onContextMenu={handleContextMenu}
