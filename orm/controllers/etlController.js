@@ -14,6 +14,7 @@ async function applyPipeline(records, pipeline) {
     fieldMap[step.field] = step;
   }
 
+  
   // Use etljs to process each record according to pipeline
   return new Promise((resolve, reject) => {
     const out = [];
