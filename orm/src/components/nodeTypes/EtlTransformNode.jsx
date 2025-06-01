@@ -99,6 +99,7 @@ const EtlTransformNode = ({ id, data }) => {
           onSave={handleDialogSave}
           initialFields={replaceParams.fields}
           initialOperation={replaceParams.operation || 'sum'}
+          nodeId={id}
         />
       ) : isFilter ? (
         <FilterFunctionDialog
@@ -108,6 +109,7 @@ const EtlTransformNode = ({ id, data }) => {
           initialField={replaceParams.field}
           initialOperator={replaceParams.operator || '=='}
           initialValue={replaceParams.value || ''}
+          nodeId={id}
         />
       ) : isMap ? (
         <MapFunctionDialog
@@ -116,6 +118,7 @@ const EtlTransformNode = ({ id, data }) => {
           onSave={handleDialogSave}
           initialField={replaceParams.field}
           initialExpression={replaceParams.expression || ''}
+          nodeId={id}
         />
       ) : (
         <ReplaceFunctionDialog
@@ -125,6 +128,7 @@ const EtlTransformNode = ({ id, data }) => {
           initialValue={replaceParams.input}
           initialSearch={replaceParams.searchValue || ''}
           initialReplace={replaceParams.replaceValue || ''}
+          nodeId={id} // Pass current node id
         />
       )}
     </>
