@@ -2,38 +2,51 @@ import React, { useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Handle } from 'reactflow';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import EtlLoadDialog from '../modal/EtlLoadDialog';
+import { updateNode } from '../../store/slices/nodesSlice';
 
 const EtlLoadNode = ({ id, data }) => {
+  const dispatch = useDispatch();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const nodes = useSelector(state => state.nodes);
 
   // Fetch edges from Redux state
   const edges = useSelector(state => state.edges);
 
   // Determine connection state dynamically
   const isInputConnected = edges.some(edge => edge.target === id);
-  const isOutputConnected = edges.some(edge => edge.source === id);
 
-  const handleDialogSave = () => {
+  const handleDialogSave = (params) => {
     setDialogOpen(false);
+    
+    // Update node data with new parameters
+    const sanitizedData = {
+      ...data,
+      mode: params.mode,
+      dir: params.dir,
+      fileName: params.fileName,
+      connString: params.connString,
+      dbName: params.dbName
+    };
+    // Remove non-serializable data
+    delete sanitizedData.onDeleteNode;
+
+    // Dispatch updateNode action to update Redux state
+    dispatch(updateNode({
+      id,
+      data: sanitizedData,
+      type: 'etlLoadNode',
+      position: nodes.find(n => n.id === id)?.position || { x: 0, y: 0 }
+    }));
   };
 
   const inputHandleStyle = {
-    left: 0,
-    top: '50%',
+    left: '50%',
+    top: 0,
     width: 10,
     height: 10,
     background: isInputConnected ? '#43a047' : '#bdbdbd',
-    borderRadius: 5,
-    border: '2px solid #fff',
-  };
-
-  const outputHandleStyle = {
-    bottom: 0,
-    width: 10,
-    height: 10,
-    background: isOutputConnected ? '#43a047' : '#bdbdbd',
     borderRadius: 5,
     border: '2px solid #fff',
   };
@@ -79,15 +92,13 @@ const EtlLoadNode = ({ id, data }) => {
         >
           <DeleteIcon fontSize="small" />
         </IconButton>
-        {/* Render a single target handle on the left side */}
-        <Handle type="target" position="left" id="etl-input" style={inputHandleStyle} />
-        {/* <Handle type="target" position="top" /> */}
-        {/* <Handle type="source" position="bottom" style={outputHandleStyle} /> */}
+        <Handle type="target" position="top" id="etl-input" style={inputHandleStyle} />
       </Box>
       <EtlLoadDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSave={handleDialogSave}
+        loadType={data.label}
       />
     </>
   );

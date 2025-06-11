@@ -5,15 +5,24 @@ const edgesSlice = createSlice({
   name: 'edges',
   initialState: [],
   reducers: {
-    setEdges: (state, action) => action.payload,
+    setEdges: (state, action) => {
+      return action.payload;
+    },
     addEdge: (state, action) => { state.push(action.payload); },
     updateEdge: (state, action) => {
-      const idx = state.findIndex(e => e.id === action.payload.id);
-      if (idx !== -1) state[idx] = action.payload;
+      const index = state.findIndex(edge => edge.id === action.payload.id);
+      if (index !== -1) {
+        state[index] = action.payload;
+      }
     },
-    removeEdge: (state, action) => state.filter(e => e.id !== action.payload),
+    removeEdge: (state, action) => {
+      return state.filter(edge => edge.id !== action.payload);
+    },
+    clearEdges: () => {
+      return [];
+    }
   },
 });
 
-export const { setEdges, addEdge, updateEdge, removeEdge } = edgesSlice.actions;
+export const { setEdges, addEdge, updateEdge, removeEdge, clearEdges } = edgesSlice.actions;
 export default edgesSlice.reducer;

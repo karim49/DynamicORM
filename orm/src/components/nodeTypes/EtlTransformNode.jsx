@@ -6,9 +6,12 @@ import ReplaceFunctionDialog from '../modal/ReplaceFunctionDialog';
 import AggregationFunctionDialog from '../modal/AggregationFunctionDialog';
 import FilterFunctionDialog from '../modal/FilterFunctionDialog';
 import MapFunctionDialog from '../modal/MapFunctionDialog';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateNode } from '../../store/slices/nodesSlice';
 
 const EtlTransformNode = ({ id, data }) => {
+  const dispatch = useDispatch();
+  const nodes = useSelector(state => state.nodes);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [replaceParams, setReplaceParams] = useState(data?.params || {});
   // Determine dialog type
@@ -18,7 +21,41 @@ const EtlTransformNode = ({ id, data }) => {
 
   const handleDialogSave = (newParams) => {
     setReplaceParams(newParams);
-    // Additional save logic if needed
+    setDialogOpen(false);
+
+    // Update node data with new parameters while preserving other node properties
+    const sanitizedData = {
+      ...data,
+      params: {
+        ...data.params,
+        // Handle parameters based on transform type
+        ...(isAggregation ? {
+          fields: newParams.fields,
+          operation: newParams.operation
+        } : isFilter ? {
+          field: newParams.field,
+          operator: newParams.operator,
+          value: newParams.value
+        } : isMap ? {
+          field: newParams.field,
+          expression: newParams.expression
+        } : {
+          // Replace function parameters
+          searchFor: newParams.searchValue,
+          replaceWith: newParams.replaceValue
+        })
+      }
+    };
+    // Remove non-serializable data
+    delete sanitizedData.onDeleteNode;
+
+    // Dispatch updateNode action to update Redux state, preserving node position and other properties
+    dispatch(updateNode({
+      id,
+      data: sanitizedData,
+      type: 'etlTransformNode',
+      position: nodes.find(n => n.id === id)?.position || { x: 0, y: 0 }
+    }));
   };
 
   // Fetch edges from Redux state

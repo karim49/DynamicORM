@@ -12,6 +12,10 @@ import StorageIcon from '@mui/icons-material/Storage';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';  
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
+import MergeIcon from '@mui/icons-material/Merge';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
+import JoinFullIcon from '@mui/icons-material/JoinFull';
+import JoinInnerIcon from '@mui/icons-material/JoinInner';
 import { sourceMeta } from '../lib/sourceMeta';
 
 // Placeholder: fetch saved schemas from backend
@@ -205,6 +209,49 @@ const Sidebar = () =>
               ))}
             </Box>
           )}
+        </AccordionDetails>
+      </Accordion>
+      <Accordion expanded={expanded === 'operations'} onChange={handleAccordionChange('operations')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#fff' }} />}>
+          <CompareArrowsIcon sx={{ fontSize: 18, mr: 1 }} />
+          <Typography sx={{ fontSize: '.95rem', fontWeight: 600, color: '#b0b8c1' }}>Operations</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          {[
+            { label: 'Inner Join', icon: <JoinInnerIcon />, type: 'inner' },
+            { label: 'Left Join', icon: <JoinFullIcon />, type: 'left' },
+            { label: 'Right Join', icon: <JoinFullIcon sx={{ transform: 'scaleX(-1)' }} />, type: 'right' },
+            { label: 'Full Join', icon: <MergeIcon />, type: 'full' },
+            { label: 'Union', icon: <CompareArrowsIcon />, type: 'union' },
+            { label: 'Normalize', icon: <TransformIcon />, type: 'normalize' }
+          ].map((op) => (
+            <Paper
+              key={op.label}
+              elevation={0}
+              sx={{
+                p: 1.2,
+                mb: 1,
+                cursor: 'grab',
+                userSelect: 'none',
+                fontSize: '.9rem',
+                bgcolor: '#2d323c',
+                color: '#fff',
+                borderRadius: 2,
+                boxShadow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                transition: 'background 0.2s',
+                '&:hover': { bgcolor: '#3a3f4b' },
+              }}
+              draggable
+              onDragStart={e => e.dataTransfer.setData('application/operation', JSON.stringify({ type: 'operation', operationType: op.type }))}
+              title={`Drag to canvas: ${op.label}`}
+            >
+              {op.icon}
+              {op.label}
+            </Paper>
+          ))}
         </AccordionDetails>
       </Accordion>
       <Accordion expanded={expanded === 'etl'} onChange={handleAccordionChange('etl')} sx={{ bgcolor: '#23272f', color: '#fff', boxShadow: 0, border: 0 }}>

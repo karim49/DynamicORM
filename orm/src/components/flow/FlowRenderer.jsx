@@ -1,18 +1,19 @@
-import React, { useCallback, useEffect } from 'react';
-import ReactFlow, { MiniMap, Controls, Background, useReactFlow, applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import React, { useCallback, useEffect, useState } from 'react';
+import ReactFlow, { MiniMap, Controls, Background, useReactFlow, applyNodeChanges, applyEdgeChanges, Panel } from 'reactflow';
 import { nodeTypes, edgeTypes } from '../nodeTypes/index';
 import IntegrateSchemas from './IntegrateSchemas';
 import 'reactflow/dist/style.css';
 import { useSelector, useDispatch } from 'react-redux';
-import { setNodes, addNode } from '../../store/slices/nodesSlice';
-import { setEdges } from '../../store/slices/edgesSlice';
+import { setNodes, addNode, clearNodes } from '../../store/slices/nodesSlice';
+import { setEdges, clearEdges } from '../../store/slices/edgesSlice';
 import { setSelectedNode, setOpenModal } from '../../store/slices/uiSlice';
 import { removeFile } from '../../store/slices/filesSlice';
-
-
+import { Box, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
 {
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const nodes = useSelector(state => state.nodes);
   const edges = useSelector(state => state.edges);
   const dispatch = useDispatch();
@@ -101,7 +102,6 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
 
   const onNodesDelete = useCallback(
     (deletedNodes) => {
-      // Collect all nodes to delete (including descendants)
       const toDelete = new Set();
       const collectDescendants = (id) => {
         toDelete.add(id);
@@ -113,8 +113,20 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
       };
       deletedNodes.forEach(node => collectDescendants(node.id));
 
-      // Remove nodes and edges connected to deleted nodes
-      const remainingNodes = nodes.filter(node => !toDelete.has(node.id));
+      const remainingNodes = nodes.filter(node => !toDelete.has(node.id)).map(node => {
+        if (node.type === 'etlTransformNode') {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              params: node.data?.params || {},
+              label: node.data?.label || 'Unknown',
+            },
+          };
+        }
+        return node;
+      });
+
       const remainingEdges = edges.filter(
         edge => !toDelete.has(edge.source) && !toDelete.has(edge.target)
       );
@@ -172,6 +184,25 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
+
+      // Handle Operations (Joins, etc)
+      const operationData = event.dataTransfer.getData('application/operation');
+      if (operationData) {
+        const { operationType } = JSON.parse(operationData);
+        const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+        const newNode = {
+          id: `operation-${operationType}-${Date.now()}`,
+          type: 'operationNode',
+          position,
+          data: { 
+            operationType,
+            label: `${operationType.charAt(0).toUpperCase() + operationType.slice(1)} Join`
+          },
+        };
+        dispatch(addNode(newNode));
+        return;
+      }
+
       // Handle ETL Transform
       const etlFn = event.dataTransfer.getData('application/etl-fn');
       if (etlFn) {
@@ -185,6 +216,7 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         dispatch(addNode(newNode));
         return;
       }
+
       // Handle ETL Load
       const etlLoad = event.dataTransfer.getData('application/etl-load');
       if (etlLoad) {
@@ -198,7 +230,8 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         dispatch(addNode(newNode));
         return;
       }
-      // Fallback: handle normal reactflow drag
+
+      // Handle Data Sources
       const data = event.dataTransfer.getData('application/reactflow');
       if (data) {
         const [type, srcType] = JSON.parse(data);
@@ -214,10 +247,14 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
           data: { label: `${type}` },
         };
         newNode.data = {
-          ...newNode.data, schema: [], parentId: null, sourceName: '',
-          srcType: srcType, type: type
+          ...newNode.data, 
+          schema: [], 
+          parentId: null, 
+          sourceName: '',
+          srcType: srcType, 
+          type: type,
+          modalType: srcType
         };
-        newNode.data = { ...newNode.data, modalType: 'connection' };
         dispatch(addNode(newNode));
       }
     },
@@ -270,9 +307,27 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
     };
   });
 
+  const handleClearAll = useCallback(() => {
+    setShowClearConfirm(true);
+  }, []);
+
+  const handleConfirmClear = useCallback(() => {
+    // Clear all nodes and edges from Redux
+    dispatch(clearNodes());
+    dispatch(clearEdges());
+    
+    // Clear any uploaded files
+    const schemaNodes = nodes.filter(n => n.type === 'schemaNode' && n.data?.sourceName);
+    schemaNodes.forEach(node => {
+      dispatch(removeFile(node.data.sourceName));
+    });
+    
+    setShowClearConfirm(false);
+  }, [dispatch, nodes]);
+
   // Pass alert handlers to IntegrateSchemas
   return (
-    <div style={{ width: '100%', height: '100%' }} onDrop={onDrop} onDragOver={onDragOver}>
+    <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
       <ReactFlow
         nodes={nodesWithDelete}
         edges={edges}
@@ -285,28 +340,37 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
         onConnect={(params) => {
           // Find the target node to determine its type
           const targetNode = nodes.find(n => n.id === params.target);
-          if (targetNode && targetNode.type === 'etlTransformNode') {
-            const label = targetNode.data?.label?.toLowerCase?.() || '';
-            if (label === 'replace') {
-              // Count how many edges already connect to this node
+          if (!targetNode) return;
+
+          let edge = {
+            id: `edge-${Date.now()}-${Math.random()}`,
+            ...params,
+            type: 'customEtlEdge',
+          };
+
+          if (targetNode.type === 'etlTransformNode') {
+            // For transform nodes, use etl-input handle
+            edge.targetHandle = 'etl-input';
+            
+            // Check replace transform connection limit
+            if (targetNode.data?.label?.toLowerCase() === 'replace') {
               const incoming = edges.filter(e => e.target === params.target && e.targetHandle === 'etl-input');
               if (incoming.length >= 1) {
                 if (setAlertMsg && setAlertOpen) {
                   setAlertMsg('Replace transform can only be connected to one source field.');
                   setAlertOpen(true);
                 }
-                return; // Prevent connection
+                return;
               }
             }
-            // Add more transform type rules here if needed
+          } else if (targetNode.type === 'operationNode') {
+            // For operation nodes, keep the original targetHandle (left-schema or right-schema)
+            edge.targetHandle = params.targetHandle;
+          } else if (targetNode.type === 'etlLoadNode') {
+            // For load nodes, use etl-input handle
+            edge.targetHandle = 'etl-input';
           }
-          // If connecting from a schema field, ensure targetHandle is 'etl-input'
-          const edge = {
-            id: `edge-${Date.now()}-${Math.random()}`,
-            ...params,
-            type: 'customEtlEdge',
-            targetHandle: 'etl-input',
-          };
+
           dispatch(setEdges([...edges, edge]));
         }}
         proOptions={{ hideAttribution: true }}
@@ -315,9 +379,33 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
           boxShadow: '0 8px 32px 0 rgba(60,72,100,0.10), 0 2px 8px 0 rgba(60,72,100,0.08)',
           position: 'relative',
         }}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        // fitView
       >
         <MiniMap />
-        <Controls />
+        <Controls>
+        {nodes.length > 0 && (
+          <Panel position="top-right" style={{ marginTop: -50, marginRight: -7 }}>
+            <Tooltip title="Clear Pipeline" placement="left">
+              <IconButton
+                onClick={handleClearAll}
+                sx={{
+                  bgcolor: 'error.main',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'error.dark',
+                  },
+                  width: 40,
+                  height: 40,
+                }}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Panel>
+        )}
+        </Controls>
         <Background
           color="rgba(54, 96, 195, 0.44)"
           gap={18}
@@ -334,7 +422,46 @@ const FlowRenderer = ({ setAlertMsg, setAlertOpen }) =>
           background: 'rgba(0, 0, 0, 0.07)',
         }} />
       </ReactFlow>
-    </div>
+
+      {/* Clear Confirmation Dialog */}
+      <Dialog 
+        open={showClearConfirm} 
+        onClose={() => setShowClearConfirm(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: '#23272f',
+            color: '#fff',
+            minWidth: '300px'
+          }
+        }}
+      >
+        <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          Clear Pipeline
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography>
+            Are you sure you want to clear the entire pipeline? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', p: 2 }}>
+          <Button 
+            onClick={() => setShowClearConfirm(false)}
+            variant="outlined" 
+            color="inherit"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmClear}
+            variant="contained" 
+            color="error"
+            autoFocus
+          >
+            Clear Pipeline
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

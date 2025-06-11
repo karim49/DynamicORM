@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box, Typography, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography } from '@mui/material';
 
-const EtlLoadDialog = ({ open, onClose, onSave, onCheckConnection }) => {
-  const [mode, setMode] = useState('file');
+const EtlLoadDialog = ({ open, onClose, onSave, onCheckConnection, loadType = 'JSON' }) => {
   const [dir, setDir] = useState('');
   const [fileName, setFileName] = useState('');
   const [connString, setConnString] = useState('');
   const [dbName, setDbName] = useState('');
   const [connStatus, setConnStatus] = useState(null);
+
+  // Set default file extension based on loadType
+  useEffect(() => {
+    if (loadType && loadType.toLowerCase() === 'json') {
+      setFileName(prev => prev || 'output.json');
+    } else if (loadType && loadType.toLowerCase() === 'csv') {
+      setFileName(prev => prev || 'output.csv');
+    }
+  }, [loadType]);
 
   const handleCheckConnection = async () => {
     if (onCheckConnection) {
@@ -17,32 +25,31 @@ const EtlLoadDialog = ({ open, onClose, onSave, onCheckConnection }) => {
   };
 
   const handleSave = () => {
-    if (mode === 'file') {
-      onSave({ mode, dir, fileName });
+    const isFileBasedLoad = loadType === 'JSON' || loadType === 'CSV';
+    if (isFileBasedLoad) {
+      onSave({ mode: 'file', dir, fileName });
     } else {
-      onSave({ mode, connString, dbName });
+      onSave({ mode: 'db', connString, dbName });
     }
+    onClose();
   };
+
+  const isFileBasedLoad = loadType === 'JSON' || loadType === 'CSV';
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Save ETL Output</DialogTitle>
+      <DialogTitle>
+        {isFileBasedLoad ? `Save as ${loadType} File` : 'Configure Database Connection'}
+      </DialogTitle>
       <DialogContent sx={{mb:2,mt:2}} >
-        <FormControl fullWidth sx={{ mb: 2 ,mt:2}}>
-          <InputLabel>Save Mode</InputLabel>
-          <Select value={mode} label="Save Mode" onChange={e => setMode(e.target.value)}>
-            <MenuItem value="file">File</MenuItem>
-            <MenuItem value="db">Database</MenuItem>
-          </Select>
-        </FormControl>
-        {mode === 'file' ? (
+        {isFileBasedLoad ? (
           <>
             <TextField
               label="Directory"
               value={dir}
               onChange={e => setDir(e.target.value)}
               fullWidth
-              sx={{ mb: 2 }}
+              sx={{ mb: 2, mt: 2 }}
               placeholder="e.g. /output/path"
             />
             <TextField
@@ -51,7 +58,7 @@ const EtlLoadDialog = ({ open, onClose, onSave, onCheckConnection }) => {
               onChange={e => setFileName(e.target.value)}
               fullWidth
               sx={{ mb: 2 }}
-              placeholder="e.g. result.csv"
+              placeholder={`e.g. output.${loadType?.toLowerCase()}`}
             />
           </>
         ) : (
@@ -61,7 +68,7 @@ const EtlLoadDialog = ({ open, onClose, onSave, onCheckConnection }) => {
               value={connString}
               onChange={e => setConnString(e.target.value)}
               fullWidth
-              sx={{ mb: 2 }}
+              sx={{ mb: 2, mt: 2 }}
               placeholder="e.g. postgres://user:pass@host:port/db"
             />
             <TextField

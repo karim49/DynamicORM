@@ -8,7 +8,7 @@ import { Background } from 'reactflow';
 import IntegrateSchemas from './flow/IntegrateSchemas';
 import { buildPipeline } from '../utils/pipelineBuilder';
 import { fetchSampleRecordApi, sendConfigurationApi } from './api/nodeHelpers';
-        
+
 const FloatingButton = ({ setAlertMsg, setAlertOpen }) =>
 {
     const [showRightSidebar, setShowRightSidebar] = useState(false);
@@ -49,24 +49,6 @@ const FloatingButton = ({ setAlertMsg, setAlertOpen }) =>
         </>
     );
 };
-
-
-
-const PipelineCard = ({ pipeline, onSubmit }) => (
-    <Card sx={{ mb: 2, bgcolor: '#1a1a1a', color: '#fff' }}>
-        <CardContent>
-            <Typography variant="h6" sx={{ mb: 1 }}>Pipeline Preview</Typography>
-            <pre style={{ fontSize: 12, color: '#fff', background: 'none', padding: 0, margin: 0 }}>
-                {JSON.stringify(pipeline, null, 2)}
-            </pre>
-            <Box sx={{ mt: 2, textAlign: 'right' }}>
-                <Button variant="contained" color="primary" onClick={() => onSubmit(pipeline)}>
-                    Submit to Backend
-                </Button>
-            </Box>
-        </CardContent>
-    </Card>
-);
 
 const PipelineModal = ({ open, pipeline, onClose, onSubmit }) => {
   const [sample, setSample] = React.useState(null);
@@ -144,30 +126,39 @@ const PipelineModal = ({ open, pipeline, onClose, onSubmit }) => {
   );
 };
 
-const RightSidebar = ({ setAlertMsg, setAlertOpen }) =>
-{
+const RightSidebar = ({ setAlertMsg, setAlertOpen }) => {
     const nodes = useSelector((state) => state.nodes);
     const edges = useSelector((state) => state.edges);
     const [pipeline, setPipeline] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    const handleProcessPipeline = () =>
-    {
+    const handleProcessPipeline = () => {
         const result = buildPipeline(nodes, edges);
-        setPipeline(result);
+
+        // Adjust pipeline preview to include transform function data and its parameters
+        const enrichedPipeline = {
+            ...result,
+            pipeline: result.pipeline.map(item => ({
+                ...item,
+                transform: item.transform ? {
+                    ...item.transform,
+                    params: nodes.find(node => node.id === item.transform?.nodeId)?.data?.params || {},
+                    function: nodes.find(node => node.id === item.transform?.nodeId)?.data?.label || 'Unknown',
+                } : null,
+            })),
+        };
+
+        setPipeline(enrichedPipeline);
         setShowModal(true);
     };
 
-    const handleSubmit = async (pipeline) =>
-    {
-        try
-        {
+    const handleSubmit = async (pipeline) => {
+        try {
             await sendConfigurationApi(pipeline);
             setAlertMsg && setAlertMsg('Pipeline submitted successfully!');
             setAlertOpen && setAlertOpen(true);
             setShowModal(false);
-        } catch
-        {
+        } catch {
             setAlertMsg && setAlertMsg('Pipeline submission failed.');
             setAlertOpen && setAlertOpen(true);
         }
@@ -182,19 +173,21 @@ const RightSidebar = ({ setAlertMsg, setAlertOpen }) =>
                 <IntegrateSchemas setAlertMsg={setAlertMsg} setAlertOpen={setAlertOpen} />
             </Box>
             <Box sx={{ mb: 3 }}>
-                <Button variant="outlined" color="success" fullWidth onClick={handleProcessPipeline}>
+                <Button 
+                    variant="outlined" 
+                    color="success" 
+                    fullWidth 
+                    onClick={handleProcessPipeline}
+                >
                     Process Pipeline
                 </Button>
             </Box>
-            <PipelineModal open={showModal} pipeline={pipeline} onClose={() => setShowModal(false)} onSubmit={handleSubmit} />
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold', fontSize: 15 }}>
-                Nodes
-            </Typography>
-            <div>
-                {nodes.map((node) => (
-                    <div key={node.id}>{node.data?.label || node.id}</div>
-                ))}
-            </div>
+            <PipelineModal 
+                open={showModal} 
+                pipeline={pipeline} 
+                onClose={() => setShowModal(false)} 
+                onSubmit={handleSubmit} 
+            />
         </Box>
     );
 };
